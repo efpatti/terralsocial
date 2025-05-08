@@ -1,45 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { FaBars } from "react-icons/fa";
 import { MdCloseFullscreen } from "react-icons/md";
 import { Button } from "@/components/ui/button";
-
-const items = [
- { label: "Quem somos", href: "/quem-somos" },
- {
-  label: "Oficinas",
-  href: "/oficinas",
-  subitems: [
-   {
-    label: "Teatro",
-    href: "/teatro",
-   },
-   {
-    label: "Capoeira",
-    href: "/capoeira",
-   },
-   {
-    label: "Costura",
-    href: "/costura",
-   },
-   {
-    label: "Artes",
-    href: "/artes",
-   },
-   {
-    label: "Inglês",
-    href: "/ingles",
-   },
-   {
-    label: "Reforço escolar",
-    href: "/reforco-escolar",
-   },
-  ],
- },
- { label: "Fale conosco", href: "/contato" },
-];
+import { items } from "@/data/items";
+import { MenuItem } from "./MenuItem";
 
 const Navbar = () => {
  const [isOpen, setIsOpen] = useState(false);
@@ -48,14 +14,8 @@ const Navbar = () => {
   <nav className="bg-white shadow-md relative z-50 border-t border-gray-100">
    {/* Desktop Menu */}
    <div className="hidden md:flex justify-center gap-6 py-3">
-    {items.map(({ label, href }) => (
-     <Link
-      key={href}
-      href={href}
-      className="font-medium text-gray-800 hover:text-[#499D4B] transition-colors px-3 py-1 rounded-md hover:bg-gray-50"
-     >
-      {label}
-     </Link>
+    {items.map((item) => (
+     <MenuItem key={item.label} item={item} />
     ))}
    </div>
 
@@ -75,16 +35,23 @@ const Navbar = () => {
    {/* Mobile Menu */}
    {isOpen && (
     <div className="flex flex-col items-stretch gap-1 py-2 px-2 bg-white border-t">
-     {items.map(({ label, href }) => (
-      <Link
-       key={href}
-       href={href}
-       onClick={() => setIsOpen(false)}
-       className="font-medium text-gray-800 hover:text-[#499D4B] px-4 py-3 rounded-md hover:bg-gray-50 transition-colors"
-      >
-       {label}
-      </Link>
-     ))}
+     {items.map((item) =>
+      "href" in item ? (
+       <MenuItem
+        key={item.label}
+        item={item}
+        onClick={() => setIsOpen(false)}
+       />
+      ) : (
+       item.subitems.map((sub) => (
+        <MenuItem
+         key={sub.href}
+         item={{ label: sub.label, href: sub.href }}
+         onClick={() => setIsOpen(false)}
+        />
+       ))
+      )
+     )}
     </div>
    )}
   </nav>
