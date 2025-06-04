@@ -1,43 +1,26 @@
 "use client";
 
+import Image from "next/image";
+
 const LogoHeader = () => {
  return (
-  <div className="py-4 flex flex-col items-center bg-white">
-   {/* Componente SVG completo */}
+  <div className="py-4 flex flex-col items-center">
+   {/* Logo como imagem */}
    <div className="w-[60px] h-[60px] relative">
-    <svg
-     viewBox="0 0 423.50668 423.50668"
-     className="absolute inset-0 w-full h-full"
-     preserveAspectRatio="xMidYMid meet"
-    >
-     {/* Círculo de fundo branco */}
-     <circle cx="211.75334" cy="211.75334" r="158.817" fill="#ffffff" />
-
-     {/* Elementos gráficos em verde */}
-     <g fill="#499D4B" transform="translate(0,423.50668) scale(0.1,-0.1)">
-      {/* Parte superior direita */}
-      <path d="M3025.6,1973.29l-31.11,125.53-314.59-418.43,21.82-250.58,131.74,176.38c1.36-13.15,1.79-26.24,2.5-39.34C2830.09,1019.21,2458.05,544.922,1926.53,411l59.57-236.609c644.42,162.39,1094.41,740.328,1094.41,1405.489,0,132.88-18.71,265.01-54.91,393.41" />
-
-      {/* Parte inferior esquerda */}
-      <path d="M528.293,2557.65l-89.641-93.22,521.711-43.23,200.407,151.99-219.457,17.49c10.414,8.16,21.257,15.5,31.968,23.08,466.529,286.85,1066.129,224.78,1462.679-153.63l168.48,176.49C2123.64,3095.39,1394.79,3168.2,831.938,2813.76,719.5,2742.95,617.66,2656.71,528.293,2557.65" />
-
-      {/* Parte superior esquerda */}
-      <path d="M1377.26,133.469l127.5-21.637-257.85,455.59-238.42,80.129,109.05-191.25c-12.61,4.019-24.78,8.847-37.08,13.429C580.809,693.961,294.703,1224.54,384.359,1765.3l-240.703,39.95C34.9844,1149.62,384.949,506.172,994.68,240.352c121.81-53.102,250.41-88.75,382.58-106.883" />
-
-      {/* Elementos centrais */}
-      <path d="M2732.61,2268.84l-1152.47-674.72,21.44-192.43,426.06,7.82,704.97,859.33" />
-      <path d="M1566.46,1589.62c4.48,1.74,9.05,3.26,13.73,4.48l-255.35,432.08-1095.219,189.92,1190.969-691.05,28.87,68.2c25.87-1.4,80.52-2.97,117-3.63" />
-      <path d="M1580.19,1594.1c-6.19,0.03-14.52,0.15-24.02,0.32-36.48,0.66-91.14,2.22-117.01,3.62l-28.86-68.19-166.8-394.14,498.43-993.448-140.27,1259.048-21.43,192.43-0.04,0.36" />
-     </g>
-    </svg>
+    <Image
+     src={"/terral.png"}
+     alt="Logo TERRAL"
+     layout="fill"
+     objectFit="contain"
+    />
    </div>
 
-   {/* Textos da logo */}
+   {/* Textos */}
    <div className="text-center mt-2">
-    <h1 className="text-3xl font-medium tracking-widest text-[#499D4B]">
+    <h1 className="text-3xl font-medium tracking-widest text-slate-200">
      TERRAL
     </h1>
-    <p className="text-xs font-normal tracking-[0.3em] text-[#499D4B] mt-[-4px]">
+    <p className="text-xs font-normal tracking-[0.3em] text-slate-200 mt-[-4px]">
      SOCIAL
     </p>
    </div>

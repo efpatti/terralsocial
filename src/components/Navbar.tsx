@@ -11,7 +11,7 @@ const Navbar = () => {
  const [isOpen, setIsOpen] = useState(false);
 
  return (
-  <nav className="bg-white shadow-md relative z-50 border-t border-gray-100">
+  <nav className="shadow-md relative z-50 border-t border-gray-100">
    {/* Desktop Menu */}
    <div className="hidden md:flex justify-center gap-6 py-3">
     {items.map((item) => (
@@ -34,7 +34,7 @@ const Navbar = () => {
 
    {/* Mobile Menu */}
    {isOpen && (
-    <div className="flex flex-col items-stretch gap-1 py-2 px-2 bg-white border-t">
+    <div className="flex flex-col items-stretch gap-1 py-2 px-2 border-t">
      {items.map((item) =>
       "href" in item ? (
        <MenuItem
