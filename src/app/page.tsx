@@ -239,15 +239,17 @@ function OficinasSection() {
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
       className="lg:col-span-3 relative h-[500px] rounded-3xl overflow-hidden shadow-2xl"
      >
       {images.map((image, index) => (
        <div
         key={index}
-        className="absolute inset-0 transition-all duration-700"
+        className="absolute inset-0 transition-all duration-700 ease-in-out"
         style={{
          opacity: index === currentImage ? 1 : 0,
          transform: index === currentImage ? "scale(1)" : "scale(1.1)",
+         zIndex: index === currentImage ? 1 : 0,
         }}
        >
         <Image
