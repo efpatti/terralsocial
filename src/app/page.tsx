@@ -1,617 +1,348 @@
 "use client";
-import { motion } from "framer-motion";
-import Head from "next/head";
-import Image from "next/image";
-import { useState, useRef } from "react";
-import { ArrowRight, ArrowLeft } from "lucide-react";
 
-// Componente de Estatística
-type Stat = {
- value: string;
+import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import {
+ ArrowRight,
+ ArrowLeft,
+ Heart,
+ Users,
+ Calendar,
+ Gift,
+ TrendingUp,
+} from "lucide-react";
+
+// Hook para animar contadores
+function useCounter(target: number, duration: number = 2) {
+ const [count, setCount] = useState(0);
+ const nodeRef = useRef<HTMLDivElement>(null);
+ const isInView = useInView(nodeRef, { once: true, margin: "-100px" });
+
+ useEffect(() => {
+  if (!isInView) return;
+
+  let startTime: number | null = null;
+  const startValue = 0;
+
+  const animate = (currentTime: number) => {
+   if (startTime === null) startTime = currentTime;
+   const elapsed = currentTime - startTime;
+   const progress = Math.min(elapsed / (duration * 1000), 1);
+
+   // Easing function (easeOutExpo)
+   const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+   const currentCount = Math.floor(
+    startValue + (target - startValue) * easeProgress
+   );
+
+   setCount(currentCount);
+
+   if (progress < 1) {
+    requestAnimationFrame(animate);
+   }
+  };
+
+  requestAnimationFrame(animate);
+ }, [isInView, target, duration]);
+
+ return { count, ref: nodeRef };
+}
+
+// Componente de Estatística REFATORADO
+interface StatProps {
+ value: number;
+ suffix?: string;
  label: string;
- colorSchema: "green" | "yellow" | "blue" | "red";
-};
-
-interface Project {
- title: string;
- description: string;
- icon: string;
+ icon: React.ElementType;
  color: string;
+ delay: number;
 }
 
-interface SlideType {
- title: string;
- description: string;
- bgColor: string;
- textColor: string;
- buttonColor: string;
-}
-
-const StatCard = ({ stat }: { stat: Stat }) => {
- const colorSchemes = {
-  green: {
-   bg: "bg-green-50",
-   text: "text-green-800",
-   border: "border-green-200",
-   accent: "bg-green-500",
-  },
-  yellow: {
-   bg: "bg-yellow-50",
-   text: "text-yellow-800",
-   border: "border-yellow-200",
-   accent: "bg-yellow-500",
-  },
-  blue: {
-   bg: "bg-blue-50",
-   text: "text-blue-800",
-   border: "border-blue-200",
-   accent: "bg-blue-500",
-  },
-  red: {
-   bg: "bg-red-50",
-   text: "text-red-800",
-   border: "border-red-200",
-   accent: "bg-red-500",
-  },
- };
-
- const colors = colorSchemes[stat.colorSchema] || colorSchemes.green;
+const StatCard = ({
+ value,
+ suffix = "",
+ label,
+ icon: Icon,
+ color,
+ delay,
+}: StatProps) => {
+ const { count, ref } = useCounter(value, 2.5);
 
  return (
   <motion.div
-   variants={{
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-   }}
-   className={`relative p-6 rounded-xl border-2 ${colors.bg} ${colors.border} ${colors.text} overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}
+   ref={ref}
+   initial={{ opacity: 0, y: 30 }}
+   whileInView={{ opacity: 1, y: 0 }}
+   viewport={{ once: true }}
+   transition={{ duration: 0.6, delay }}
+   className="relative group"
   >
-   <div className={`absolute top-0 left-0 h-1 w-full ${colors.accent}`} />
-   <motion.div
-    initial={{ scale: 0.9 }}
-    whileInView={{ scale: 1 }}
-    transition={{ type: "spring", stiffness: 300 }}
-    className={`text-3xl font-extrabold mb-3 ${colors.text}`}
-   >
-    {stat.value}
-   </motion.div>
-   <motion.p
-    initial={{ opacity: 0, x: -10 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.2 }}
-    className="text-lg font-medium"
-   >
-    {stat.label}
-   </motion.p>
-   <div
-    className={`absolute bottom-2 right-2 w-8 h-8 rounded-full ${colors.accent} opacity-10`}
-   />
+   <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-gray-200">
+    {/* Ícone com cor */}
+    <div
+     className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+     style={{ backgroundColor: `${color}15` }}
+    >
+     <Icon size={28} style={{ color }} />
+    </div>
+
+    {/* Número animado */}
+    <div className="flex items-baseline gap-1 mb-2">
+     <span className="text-4xl font-black tracking-tight" style={{ color }}>
+      {count.toLocaleString("pt-BR")}
+     </span>
+     {suffix && (
+      <span className="text-2xl font-bold text-gray-400">{suffix}</span>
+     )}
+    </div>
+
+    {/* Label */}
+    <p className="text-sm text-gray-600 leading-snug font-medium">{label}</p>
+
+    {/* Barra decorativa */}
+    <div
+     className="mt-4 h-1 w-12 rounded-full transition-all group-hover:w-full"
+     style={{ backgroundColor: color }}
+    />
+   </div>
   </motion.div>
  );
 };
 
-// Componente de Projeto
-const ProjectCard = ({
- project,
- index,
-}: {
- project: Project;
- index: number;
-}) => (
- <motion.div
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: true }}
-  variants={{
-   hidden: { opacity: 0, y: 20 },
-   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  }}
-  custom={index}
-  whileHover={{ y: -10 }}
-  className={`p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border ${project.color}`}
- >
-  <div className="text-4xl mb-4">{project.icon}</div>
-  <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-  <p>{project.description}</p>
-  <button
-   className={`mt-4 font-medium hover:opacity-80 transition-opacity ${
-    index % 3 === 0
-     ? "text-red-600"
-     : index % 3 === 1
-     ? "text-blue-600"
-     : "text-green-600"
-   }`}
-  >
-   Saiba mais →
-  </button>
- </motion.div>
-);
+// Dados mockados
+const stats = [
+ {
+  value: 15000,
+  suffix: "+",
+  label: "Pessoas atendidas até hoje",
+  icon: Users,
+  color: "#499D4B",
+ },
+ {
+  value: 200,
+  suffix: "+",
+  label: "Pessoas nas oficinas atualmente",
+  icon: Heart,
+  color: "#3ca0e7",
+ },
+ {
+  value: 3000,
+  suffix: "+",
+  label: "Participaram de eventos e palestras",
+  icon: TrendingUp,
+  color: "#E74C3C",
+ },
+ { value: 30, label: "Atendidas no Grupo AA", icon: Users, color: "#F59E0B" },
+ {
+  value: 600,
+  label: "Brinquedos doados no Dia das Crianças",
+  icon: Gift,
+  color: "#8B5CF6",
+ },
+];
 
-// Componente de Slide
-const Slide = ({
- slide,
- isActive,
-}: {
- slide: SlideType;
- isActive: boolean;
-}) => (
- <motion.div
-  initial={{ opacity: 0 }}
-  animate={{
-   opacity: isActive ? 1 : 0,
-   zIndex: isActive ? 1 : 0,
-  }}
-  transition={{ duration: 0.5 }}
-  className={`absolute inset-0 flex items-center justify-center ${slide.bgColor} ${slide.textColor}`}
- >
-  <div className="container mx-auto px-6 text-center">
-   <motion.h1
-    initial={{ y: -50, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ delay: 0.3 }}
-    className="text-4xl md:text-6xl font-bold mb-6"
-   >
-    {slide.title}
-   </motion.h1>
-   <motion.p
-    initial={{ y: 50, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ delay: 0.5 }}
-    className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto"
-   >
-    {slide.description}
-   </motion.p>
-   <motion.button
-    initial={{ scale: 0 }}
-    animate={{ scale: 1 }}
-    transition={{ delay: 0.7 }}
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    className={`px-8 py-3 rounded-lg font-bold shadow-lg ${slide.buttonColor}`}
-   >
-    Saiba mais
-   </motion.button>
-  </div>
- </motion.div>
-);
-
-// Serviço de dados (poderia ser movido para um arquivo separado)
-const DataService = {
- getProjects: () => [
-  {
-   title: "Hortas Comunitárias",
-   description: "Cultivando alimentos e cidadania em áreas urbanas",
-   icon: "🌱",
-   color: "bg-green-100 text-green-800 border-green-200",
-  },
-  {
-   title: "Educação Ambiental",
-   description: "Programas de conscientização para crianças e adultos",
-   icon: "📚",
-   color: "bg-blue-100 text-blue-800 border-blue-200",
-  },
-  {
-   title: "Reciclagem Solidária",
-   description: "Transformando resíduos em renda para comunidades",
-   icon: "♻️",
-   color: "bg-red-100 text-red-800 border-red-200",
-  },
- ],
-
- getStats: () => [
-  {
-   value: "15mil+",
-   label: "Pessoas atendidas até hoje.",
-   colorSchema: "green",
-  },
-  {
-   value: "+200 pessoas",
-   label: "Comunidades atendidas",
-   colorSchema: "yellow",
-  },
-  {
-   value: "+3000 pessoas",
-   label: "já participaram de eventos e palestras.",
-   colorSchema: "blue",
-  },
-  {
-   value: "30 pessoas",
-   label: "atendidas atualmente no Grupo AA.",
-   colorSchema: "red",
-  },
-  {
-   value: "600 brinquedos",
-   label:
-    "sob estimativa de serem doados na comunidade do Terreirão no dia das crianças.",
-   colorSchema: "green",
-  },
- ],
-
- getSlides: () => [
-  {
-   title: "Transformando Comunidades",
-   description: "Projetos que unem desenvolvimento social e ambiental",
-   bgColor: "bg-green-600",
-   textColor: "text-white",
-   buttonColor: "bg-white text-green-600",
-  },
-  {
-   title: "Educação para o Futuro",
-   description: "Capacitando jovens para um mundo sustentável",
-   bgColor: "bg-blue-600",
-   textColor: "text-white",
-   buttonColor: "bg-white text-blue-600",
-  },
-  {
-   title: "Ação Social Urgente",
-   description: "Atendimento emergencial para comunidades vulneráveis",
-   bgColor: "bg-red-600",
-   textColor: "text-white",
-   buttonColor: "bg-white text-red-600",
-  },
- ],
-};
+const slides = [
+ {
+  title: "Transformando vidas através da arte",
+  description: "32 anos promovendo educação, cultura e inclusão no Terreirão",
+  bgColor: "bg-gradient-to-br from-green-600 to-green-700",
+  textColor: "text-white",
+ },
+ {
+  title: "Educação que liberta",
+  description: "Teatro, capoeira, artes e muito mais para todas as idades",
+  bgColor: "bg-gradient-to-br from-blue-600 to-blue-700",
+  textColor: "text-white",
+ },
+ {
+  title: "Inclusão é nosso propósito",
+  description: "Projetos para PCD, idosos e toda a comunidade",
+  bgColor: "bg-gradient-to-br from-red-600 to-red-700",
+  textColor: "text-white",
+ },
+];
 
 export default function Home() {
  const [currentSlide, setCurrentSlide] = useState(0);
- const projects = DataService.getProjects();
- const stats = DataService.getStats();
- const slides = DataService.getSlides();
- const touchStartX = useRef<number | null>(null);
- const touchEndX = useRef<number | null>(null);
 
- // Touch event handlers for swipe
- const handleTouchStart = (e: React.TouchEvent) => {
-  touchStartX.current = e.touches[0].clientX;
-  touchEndX.current = null;
- };
-
- const handleTouchMove = (e: React.TouchEvent) => {
-  touchEndX.current = e.touches[0].clientX;
- };
-
- const handleTouchEnd = () => {
-  if (touchStartX.current !== null && touchEndX.current !== null) {
-   const distance = touchStartX.current - touchEndX.current;
-   if (Math.abs(distance) > 40) {
-    if (distance > 0) {
-     nextSlide(); // Swipe left
-    } else {
-     prevSlide(); // Swipe right
-    }
-   }
-  }
-  touchStartX.current = null;
-  touchEndX.current = null;
- };
-
- const nextSlide = () => {
-  setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
- };
-
- const prevSlide = () => {
-  setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
- };
+ const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+ const prevSlide = () =>
+  setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
  return (
-  <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-   <Head>
-    <title>
-     Terral Social - Transformando vidas através da sustentabilidade
-    </title>
-    <meta
-     name="description"
-     content="ONG dedicada a projetos sociais e ambientais"
-    />
-    <link rel="icon" href="/favicon.ico" />
-   </Head>
-
-   {/* Slider Section */}
-   <section
-    className="relative h-96 md:h-screen max-h-[800px] overflow-hidden"
-    onTouchStart={handleTouchStart}
-    onTouchMove={handleTouchMove}
-    onTouchEnd={handleTouchEnd}
-   >
+  <div className="min-h-screen bg-[#FFFBF5]">
+   {/* Hero Slider */}
+   <section className="relative h-[500px] md:h-[600px] overflow-hidden">
     {slides.map((slide, index) => (
-     <Slide key={index} slide={slide} isActive={index === currentSlide} />
+     <motion.div
+      key={index}
+      initial={{ opacity: 0 }}
+      animate={{
+       opacity: index === currentSlide ? 1 : 0,
+       zIndex: index === currentSlide ? 1 : 0,
+      }}
+      transition={{ duration: 0.7 }}
+      className={`absolute inset-0 flex items-center justify-center ${slide.bgColor} ${slide.textColor}`}
+     >
+      {/* Pattern de fundo */}
+      <svg
+       className="absolute inset-0 w-full h-full opacity-10"
+       xmlns="http://www.w3.org/2000/svg"
+      >
+       <defs>
+        <pattern
+         id={`pattern-${index}`}
+         x="0"
+         y="0"
+         width="80"
+         height="80"
+         patternUnits="userSpaceOnUse"
+        >
+         <circle cx="40" cy="40" r="2" fill="white" />
+        </pattern>
+       </defs>
+       <rect width="100%" height="100%" fill={`url(#pattern-${index})`} />
+      </svg>
+
+      <div className="container mx-auto px-6 text-center relative z-10">
+       <motion.h1
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        className="text-4xl md:text-6xl font-black mb-4 leading-tight"
+       >
+        {slide.title}
+       </motion.h1>
+       <motion.p
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.6 }}
+        className="text-lg md:text-2xl mb-8 max-w-3xl mx-auto font-light"
+       >
+        {slide.description}
+       </motion.p>
+       <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="px-8 py-4 bg-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 mx-auto"
+        style={{
+         color: index === 0 ? "#499D4B" : index === 1 ? "#3ca0e7" : "#E74C3C",
+        }}
+       >
+        Conheça nossos projetos
+        <ArrowRight size={20} />
+       </motion.button>
+      </div>
+     </motion.div>
     ))}
 
+    {/* Controles */}
     <button
      onClick={prevSlide}
-     className="absolute left-4 top-1/2 z-10 p-2 rounded-full bg-white bg-opacity-30 text-white hover:bg-opacity-50 transition-all"
+     className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all"
     >
      <ArrowLeft size={24} />
     </button>
     <button
      onClick={nextSlide}
-     className="absolute right-4 top-1/2 z-10 p-2 rounded-full bg-white bg-opacity-30 text-white hover:bg-opacity-50 transition-all"
+     className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all"
     >
      <ArrowRight size={24} />
     </button>
 
-    <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-10">
+    {/* Dots */}
+    <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-20">
      {slides.map((_, index) => (
       <button
        key={index}
        onClick={() => setCurrentSlide(index)}
-       className={`w-3 h-3 rounded-full transition-all ${
-        index === currentSlide ? "bg-white w-6" : "bg-white bg-opacity-50"
+       className={`h-2 rounded-full transition-all ${
+        index === currentSlide ? "bg-white w-8" : "bg-white/50 w-2"
        }`}
       />
      ))}
     </div>
    </section>
 
-   {/* Stats Section */}
-   <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-    <div className="container mx-auto px-6">
+   {/* Stats Section REFATORADA */}
+   <section className="py-20 px-4">
+    <div className="max-w-7xl mx-auto">
+     {/* Header */}
      <motion.div
-      initial="hidden"
-      whileInView="visible"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      variants={{
-       visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-         staggerChildren: 0.2,
-        },
-       },
-       hidden: { opacity: 0, y: 20 },
-      }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"
+      className="text-center mb-12"
      >
-      {stats.map((stat, index) => (
-       <StatCard key={index} stat={stat as Stat} />
-      ))}
-     </motion.div>
-
-     <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ delay: 0.5 }}
-      className="mt-12 text-center"
-     >
-      <p className="text-gray-500 italic">
-       Cada número representa uma vida transformada e uma comunidade impactada.
+      <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
+       Nosso <span className="text-[#499D4B]">Impacto</span>
+      </h2>
+      <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+       Cada número representa vidas transformadas e uma comunidade mais forte
       </p>
      </motion.div>
-    </div>
-   </section>
 
-   {/* Projects Section */}
-   <section id="projects" className="container mx-auto px-6 py-20">
-    <motion.div
-     initial="hidden"
-     whileInView="visible"
-     viewport={{ once: true, margin: "-100px" }}
-     variants={{
-      hidden: { opacity: 0, y: 20 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-     }}
-     className="text-center mb-16"
-    >
-     <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
-      Nossos <span className="text-green-600">Projetos</span>
-     </h2>
-     <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-      Conheça nossas iniciativas que estão transformando realidades e promovendo
-      desenvolvimento sustentável.
-     </p>
-    </motion.div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-     {projects.map((project, index) => (
-      <ProjectCard key={index} project={project} index={index} />
-     ))}
-    </div>
-   </section>
-
-   {/* About Section */}
-   <section id="about" className="bg-gray-50 py-20">
-    <div className="container mx-auto px-6">
-     <div className="flex flex-col md:flex-row items-center gap-12">
-      <motion.div
-       initial={{ opacity: 0, x: -50 }}
-       whileInView={{ opacity: 1, x: 0 }}
-       viewport={{ once: true }}
-       transition={{ duration: 0.6 }}
-       className="md:w-1/2"
-      >
-       <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl">
-        <Image
-         src="/about-image.jpg"
-         alt="Sobre a Terral Social"
-         layout="fill"
-         objectFit="cover"
-        />
-       </div>
-      </motion.div>
-      <motion.div
-       initial={{ opacity: 0, x: 50 }}
-       whileInView={{ opacity: 1, x: 0 }}
-       viewport={{ once: true }}
-       transition={{ duration: 0.6 }}
-       className="md:w-1/2"
-      >
-       <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-        Sobre a <span className="text-green-600">Terral Social</span>
-       </h2>
-       <p className="text-gray-600 mb-4">
-        Fundada em 2010, a Terral Social nasceu da vontade de criar um mundo
-        mais justo e sustentável, onde o desenvolvimento social ande de mãos
-        dadas com a preservação ambiental.
-       </p>
-       <p className="text-gray-600 mb-6">
-        Nossa missão é implementar projetos que transformem realidades,
-        capacitando pessoas e comunidades para se tornarem agentes de mudança em
-        seus próprios territórios.
-       </p>
-       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium shadow-md hover:bg-green-700 transition-colors"
-       >
-        Conheça nossa história
-       </motion.button>
-      </motion.div>
+     {/* Grid de stats */}
+     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      {stats.map((stat, index) => (
+       <StatCard
+        key={index}
+        value={stat.value}
+        suffix={stat.suffix}
+        label={stat.label}
+        icon={stat.icon}
+        color={stat.color}
+        delay={index * 0.1}
+       />
+      ))}
      </div>
     </div>
    </section>
 
-   {/* Donation CTA */}
-   <section id="donate" className="bg-green-700 text-white py-20">
-    <div className="container mx-auto px-6 text-center">
+   {/* CTA Section */}
+   <section className="py-16 px-4">
+    <div className="max-w-5xl mx-auto">
      <motion.div
-      initial="hidden"
-      whileInView="visible"
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
-      variants={{
-       hidden: { opacity: 0, y: 20 },
-       visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-      }}
+      className="bg-gradient-to-br from-[#499D4B] to-[#3d8540] rounded-3xl p-12 shadow-2xl relative overflow-hidden"
      >
-      <h2 className="text-3xl md:text-4xl font-bold mb-6">
-       Sua doação transforma vidas
-      </h2>
-      <p className="text-xl mb-8 max-w-3xl mx-auto">
-       Com seu apoio, podemos ampliar nossos projetos e alcançar mais
-       comunidades.
-      </p>
-      <div className="flex flex-col sm:flex-row justify-center gap-4">
-       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="px-8 py-4 bg-white text-green-700 rounded-lg font-bold shadow-lg hover:bg-gray-100 transition-colors"
-       >
-        Doar Agora
-       </motion.button>
-       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="px-8 py-4 border border-white text-white rounded-lg font-bold hover:bg-green-600 transition-colors"
-       >
-        Seja um voluntário
-       </motion.button>
-      </div>
-     </motion.div>
-    </div>
-   </section>
-
-   {/* Contact Section */}
-   <section id="contact" className="container mx-auto px-6 py-20">
-    <div className="max-w-4xl mx-auto">
-     <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true }}
-      variants={{
-       hidden: { opacity: 0, y: 20 },
-       visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-      }}
-      className="text-center mb-12"
-     >
-      <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
-       Fale <span className="text-green-600">Conosco</span>
-      </h2>
-      <p className="mt-4 text-gray-600">
-       Tem dúvidas, sugestões ou quer colaborar com nosso trabalho? Entre em
-       contato!
-      </p>
-     </motion.div>
-
-     <motion.form
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-2xl shadow-xl border border-green-100"
-      style={{
-       background: "linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)",
-      }}
-     >
-      <div className="md:col-span-2">
-       <label
-        htmlFor="name"
-        className="block text-gray-700 mb-2 font-semibold tracking-wide"
-       >
-        Nome
-       </label>
-       <input
-        type="text"
-        id="name"
-        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent bg-gray-50 text-gray-800 placeholder-gray-400 transition-all"
-        placeholder="Seu nome completo"
-       />
-      </div>
-      <div>
-       <label
-        htmlFor="email"
-        className="block text-gray-700 mb-2 font-semibold tracking-wide"
-       >
-        E-mail
-       </label>
-       <input
-        type="email"
-        id="email"
-        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent bg-gray-50 text-gray-800 placeholder-gray-400 transition-all"
-        placeholder="seu@email.com"
-       />
-      </div>
-      <div>
-       <label
-        htmlFor="phone"
-        className="block text-gray-700 mb-2 font-semibold tracking-wide"
-       >
-        Telefone
-       </label>
-       <input
-        type="tel"
-        id="phone"
-        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent bg-gray-50 text-gray-800 placeholder-gray-400 transition-all"
-        placeholder="(00) 00000-0000"
-       />
-      </div>
-      <div className="md:col-span-2">
-       <label
-        htmlFor="message"
-        className="block text-gray-700 mb-2 font-semibold tracking-wide"
-       >
-        Mensagem
-       </label>
-       <textarea
-        id="message"
-        rows={5}
-        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent bg-gray-50 text-gray-800 placeholder-gray-400 transition-all resize-none"
-        placeholder="Como podemos te ajudar?"
-       ></textarea>
-      </div>
-      <motion.button
-       whileHover={{ scale: 1.04, backgroundColor: "#059669" }}
-       whileTap={{ scale: 0.98 }}
-       type="submit"
-       className="md:col-span-2 px-8 py-4 bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg font-bold shadow-lg hover:from-green-600 hover:to-green-800 transition-all tracking-wide text-lg border-2 border-green-600"
-       style={{ letterSpacing: "0.05em" }}
+      {/* SVG decorativo */}
+      <svg
+       className="absolute top-0 right-0 w-64 h-64 opacity-10"
+       viewBox="0 0 200 200"
       >
-       <span className="inline-flex items-center gap-2">
-        <svg
-         xmlns="http://www.w3.org/2000/svg"
-         fill="none"
-         viewBox="0 0 24 24"
-         strokeWidth={2}
-         stroke="currentColor"
-         className="w-6 h-6"
-        >
-         <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.25 12l8.954 8.955c.44.439 1.152.439 1.591 0L21.75 12M4.5 9.75V6.375A2.625 2.625 0 017.125 3.75h9.75A2.625 2.625 0 0119.5 6.375v3.375"
-         />
-        </svg>
-        Enviar Mensagem
-       </span>
-      </motion.button>
-     </motion.form>
+       <circle cx="100" cy="100" r="80" fill="white" />
+       <path
+        d="M100 40 L120 80 L160 90 L130 120 L140 160 L100 140 L60 160 L70 120 L40 90 L80 80 Z"
+        fill="white"
+       />
+      </svg>
+
+      <div className="relative z-10 text-center text-white">
+       <h2 className="text-3xl md:text-4xl font-black mb-4">
+        Faça parte dessa transformação
+       </h2>
+       <p className="text-lg mb-8 opacity-95 max-w-2xl mx-auto">
+        Sua contribuição ou tempo fazem a diferença na vida de centenas de
+        pessoas
+       </p>
+       <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <button className="bg-white text-[#499D4B] font-bold px-8 py-4 rounded-full hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+         <Heart size={20} fill="currentColor" />
+         Doar Agora
+        </button>
+        <button className="bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-full hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+         <Users size={20} />
+         Seja Voluntário
+        </button>
+       </div>
+      </div>
+     </motion.div>
     </div>
    </section>
   </div>
