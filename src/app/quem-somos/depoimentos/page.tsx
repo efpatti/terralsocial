@@ -31,6 +31,11 @@ const testimonials = [
   icon: Users,
   size: "medium",
  },
+    {
+      name: "Depoimento",
+      role: "Participante do Teatro",
+      text: "Fazer teatro para mim é uma coisa que eu amo na minha vida. Envolve não só a arte do teatro, da cultura, mas para a vida, para o trabalho, para o dia a dia. O que me move é o amor de poder ensinar aquilo que eu aprendi com pessoas que foram solidárias comigo, essa semente que foi plantada, eu pegar e dividir com crianças que eu olho nos olhinhos delas assim e me vejo ali. E eu queria levar o que a gente conseguiu aqui, eu queria levar para outros lugares, para outras pessoas, outros grupos de adolescentes e graças a Deus, de certa forma, deu certo."
+    },
 ];
 
 const TestimonialsPage = () => {
