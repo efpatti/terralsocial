@@ -31,15 +31,15 @@ const testimonials = [
   icon: Users,
   size: "medium",
  },
-    {
-      name: "Depoimento",
-      role: "Participante do Teatro",
-      text: "Fazer teatro para mim é uma coisa que eu amo na minha vida. Envolve não só a arte do teatro, da cultura, mas para a vida, para o trabalho, para o dia a dia. O que me move é o amor de poder ensinar aquilo que eu aprendi com pessoas que foram solidárias comigo, essa semente que foi plantada, eu pegar e dividir com crianças que eu olho nos olhinhos delas assim e me vejo ali. E eu queria levar o que a gente conseguiu aqui, eu queria levar para outros lugares, para outras pessoas, outros grupos de adolescentes e graças a Deus, de certa forma, deu certo."
-    },
+ {
+  name: "Depoimento",
+  role: "Participante do Teatro",
+  text:
+   "Fazer teatro para mim é uma coisa que eu amo na minha vida. Envolve não só a arte do teatro, da cultura, mas para a vida, para o trabalho, para o dia a dia. O que me move é o amor de poder ensinar aquilo que eu aprendi com pessoas que foram solidárias comigo, essa semente que foi plantada, eu pegar e dividir com crianças que eu olho nos olhinhos delas assim e me vejo ali. E eu queria levar o que a gente conseguiu aqui, eu queria levar para outros lugares, para outras pessoas, outros grupos de adolescentes e graças a Deus, de certa forma, deu certo.",
+ },
 ];
 
 const TestimonialsPage = () => {
- const FirstIcon = testimonials[0].icon;
  return (
   <div className="min-h-screen bg-[#FFFBF5] py-12 px-4 md:px-8 relative overflow-hidden">
    {/* SVG decorativo de fundo - Formas orgânicas */}
@@ -137,7 +137,10 @@ const TestimonialsPage = () => {
          className="w-12 h-12 rounded-2xl flex items-center justify-center"
          style={{ backgroundColor: `${testimonials[0].color}20` }}
         >
-         <FirstIcon size={24} color={testimonials[0].color} />
+         {(() => {
+          const Icon = testimonials[0].icon;
+          return Icon ? <Icon size={24} color={testimonials[0].color} /> : null;
+         })()}
         </div>
         <div>
          <h3 className="text-2xl font-bold text-gray-800">
@@ -171,7 +174,6 @@ const TestimonialsPage = () => {
      {/* Cards 2 e 3 - Menores (direita, empilhados) */}
      <div className="md:col-span-5 flex flex-col gap-4 md:gap-6">
       {testimonials.slice(1).map((item, idx) => {
-       const ItemIcon = item.icon;
        return (
         <motion.div
          key={item.name}
@@ -219,7 +221,10 @@ const TestimonialsPage = () => {
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ backgroundColor: `${item.color}20` }}
            >
-            <ItemIcon size={20} color={item.color} />
+            {(() => {
+             const Icon = item.icon;
+             return Icon ? <Icon size={20} color={item.color} /> : null;
+            })()}
            </div>
            <div>
             <h3 className="text-xl font-bold text-gray-800">{item.name}</h3>

@@ -3,5 +3,5 @@ export type NavbarItem =
  | {
     label: string;
     subitems: { label: string; href: string }[];
-    href?: undefined;
+    href?: string;
    };

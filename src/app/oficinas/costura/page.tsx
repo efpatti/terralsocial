@@ -4,19 +4,19 @@ import { Scissors } from "lucide-react";
 export default function CosturaPage() {
  return (
   <OficinaPage
-   title="Costura e Moda"
-   subtitle="Aprenda técnicas de costura e desenvolva sua criatividade na moda"
-   color="#E74C3C"
+   title="Costura"
+   subtitle="Desenvolvimento profissional através da socialização e troca de conhecimentos"
+   color="#8B5CF6"
    icon={<Scissors className="w-16 h-16 md:w-20 md:h-20" />}
    schedule="Terças e Quintas, 14h-16h"
-   ageGroup="12 a 17 anos"
-   description="A oficina de Costura e Moda oferece conhecimentos práticos e teóricos sobre confecção de roupas e acessórios. Os participantes aprendem desde o básico da costura até técnicas mais avançadas, desenvolvendo habilidades que podem se tornar uma profissão. Curabitur blandit tempus porttitor. Nullam quis risus eget urna mollis ornare vel eu leo. Maecenas sed diam eget risus varius blandit sit amet non magna."
+   ageGroup="12 anos ou mais"
+   description="Oferece troca de informações e desenvolvimento profissional, através da socialização de quem faz parte dessa oficina. Além disso, é mais uma possibilidade de fonte de renda para as costureiras."
    objectives={[
-    "Ensinar técnicas fundamentais de costura à mão e à máquina com segurança",
-    "Desenvolver noções de modelagem e criação de peças básicas do vestuário",
-    "Estimular a consciência sobre moda sustentável e reaproveitamento de materiais",
-    "Proporcionar conhecimento profissionalizante que pode gerar renda futura",
-    "Criar peças funcionais que os alunos possam usar e presentear",
+    "Promover troca de informações e conhecimentos entre participantes",
+    "Desenvolver habilidades profissionais em costura",
+    "Estimular a socialização através do trabalho coletivo",
+    "Criar oportunidades de geração de renda",
+    "Ensinar técnicas de costura e confecção",
    ]}
   />
  );

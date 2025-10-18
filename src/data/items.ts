@@ -18,7 +18,11 @@ const withHref =
   href: entry.href ?? path(base, slugify(entry.label)),
  });
 
-const mapItem = (item: any): NavbarItem => {
+const mapItem = (item: {
+ label: string;
+ href?: string;
+ subitems?: { label: string; href?: string }[];
+}): NavbarItem => {
  const base = slugify(item.label);
  const href = item.href ?? path(base);
 
