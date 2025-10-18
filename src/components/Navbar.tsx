@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { X, Menu, Heart } from "lucide-react";
+import { X, Menu, Heart, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { items } from "@/data/items";
 import { MenuItem } from "./MenuItem";
@@ -13,20 +13,24 @@ const Navbar = () => {
 
  return (
   <nav
-   className="shadow-sm relative z-50 bg-white"
+   className="shadow-sm relative z-50 bg-white border-t-2"
    style={{ borderColor: terralTheme.colors.primary }}
   >
-   {/* Desktop Menu */}
+   {/* Desktop: Tudo alinhado horizontalmente */}
    <div className="hidden md:flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
-    {/* CTA Esquerda - Seja Voluntário */}
+    {/* CTA Esquerda */}
     <motion.div
      initial={{ opacity: 0, x: -20 }}
      animate={{ opacity: 1, x: 0 }}
      transition={{ duration: 0.5, ease: "easeOut" }}
     >
      <Link href="/voluntario">
-      <Button className="bg-blue-600/70 hover:bg-blue-600 text-white font-semibold px-5 py-2 shadow-md hover:shadow-lg transition-all duration-300 uppercase">
-       Seja Voluntário
+      <Button
+       variant="ghost"
+       className="text-gray-700 font-semibold hover:text-[#499D4B] hover:bg-green-50 transition-all duration-200 flex items-center gap-2 px-4 py-2"
+      >
+       <HandHeart size={18} />
+       <span>Seja Voluntário</span>
       </Button>
      </Link>
     </motion.div>
@@ -49,24 +53,33 @@ const Navbar = () => {
      ))}
     </div>
 
-    {/* CTA Direita - Doe Agora */}
+    {/* CTA Direita */}
     <motion.div
      initial={{ opacity: 0, x: 20 }}
      animate={{ opacity: 1, x: 0 }}
      transition={{ duration: 0.5, ease: "easeOut" }}
     >
      <Link href="/doar">
-      <Button className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 shadow-md hover:shadow-lg transition-all duration-300 uppercase">
-       Doe Agora
+      <Button
+       className="text-white font-semibold px-6 py-2 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2"
+       style={{ backgroundColor: terralTheme.colors.primary }}
+       onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "#3d8540";
+       }}
+       onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = terralTheme.colors.primary;
+       }}
+      >
+       <Heart size={16} fill="white" />
+       <span>Doe Agora</span>
       </Button>
      </Link>
     </motion.div>
    </div>
 
-   {/* Mobile Menu */}
+   {/* Mobile */}
    <div className="md:hidden">
-    {/* Header Mobile com CTAs */}
-    <div className="flex justify-between items-center px-4 py-3 border-b">
+    <div className="flex justify-between items-center px-4 py-3">
      <span
       className="font-bold text-base"
       style={{ color: terralTheme.colors.primary }}
@@ -75,13 +88,14 @@ const Navbar = () => {
      </span>
 
      <div className="flex items-center gap-2">
-      {/* CTAs compactos no mobile */}
       <Link href="/doar">
        <Button
         size="sm"
-        className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-full"
+        className="text-white text-xs font-semibold px-4 py-2 shadow-sm flex items-center gap-1.5"
+        style={{ backgroundColor: terralTheme.colors.primary }}
        >
         <Heart size={14} fill="white" />
+        <span>Doar</span>
        </Button>
       </Link>
 
@@ -124,7 +138,6 @@ const Navbar = () => {
      </div>
     </div>
 
-    {/* Menu Dropdown Mobile */}
     <AnimatePresence>
      {isOpen && (
       <motion.div
@@ -132,21 +145,8 @@ const Navbar = () => {
        animate={{ opacity: 1, height: "auto" }}
        exit={{ opacity: 0, height: 0 }}
        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-       className="flex flex-col items-stretch gap-1 py-2 px-2 overflow-hidden bg-gray-50"
+       className="flex flex-col items-stretch gap-1 py-2 px-2 overflow-hidden bg-gray-50 border-t"
       >
-       {/* Link "Seja Voluntário" dentro do menu mobile */}
-       <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-       >
-        <Link href="/voluntario" onClick={() => setIsOpen(false)}>
-         <div className="px-4 py-3 bg-blue-50 text-blue-600 font-semibold text-sm flex items-center justify-center hover:bg-blue-100 transition-colors uppercase">
-          Seja Voluntário
-         </div>
-        </Link>
-       </motion.div>
-
        {items.map((item, idx) =>
         "href" in item ? (
          <motion.div
@@ -183,6 +183,26 @@ const Navbar = () => {
          ))
         )
        )}
+
+       <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
+        className="mt-2 pt-2 border-t"
+       >
+        <Link href="/voluntario" onClick={() => setIsOpen(false)}>
+         <div
+          className="px-4 py-3 rounded-md bg-white border-2 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-green-50 transition-colors"
+          style={{
+           borderColor: terralTheme.colors.primary,
+           color: terralTheme.colors.primary,
+          }}
+         >
+          <HandHeart size={16} />
+          Seja Voluntário
+         </div>
+        </Link>
+       </motion.div>
       </motion.div>
      )}
     </AnimatePresence>

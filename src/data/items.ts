@@ -1,17 +1,14 @@
 import { NavbarItem } from "@/types/navbar";
 
-// Função para transformar label em href
-function labelToHref(label: string): string {
- return (
-  "/" +
-  label
-   .toLowerCase()
-   .normalize("NFD")
-   .replace(/[\u0300-\u036f]/g, "")
-   .replace(/[^a-z0-9\s-]/g, "")
-   .replace(/\s+/g, "-")
-   .replace(/-+/g, "-")
- );
+// Função para transformar label em slug
+function labelToSlug(label: string): string {
+ return label
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .replace(/[^a-z0-9\s-]/g, "")
+  .replace(/\s+/g, "-")
+  .replace(/-+/g, "-");
 }
 
 // Dados base apenas com labels
@@ -48,25 +45,24 @@ const rawItems = [
  { label: "Fale conosco" },
 ];
 
-// Em items.ts, no mapeamento dos rawItems
+// Mapeamento com contexto hierárquico
 export const items: NavbarItem[] = rawItems.map((item) => {
  const hasSubitems = item.subitems && item.subitems.length > 0;
+ const parentSlug = labelToSlug(item.label);
 
  if (hasSubitems) {
   return {
    label: item.label,
    subitems: item.subitems.map((subitem) => ({
     label: subitem.label,
-    href: labelToHref(subitem.label),
+    href: `/${parentSlug}/${labelToSlug(subitem.label)}`, // 🎯 Aqui tá o pulo do gato
    })),
-   // Explicitly set href to undefined to match the type
    href: undefined,
   };
  } else {
   return {
    label: item.label,
-   href: labelToHref(item.label),
-   // Explicitly set subitems to undefined to match the type
+   href: `/${parentSlug}`,
    subitems: undefined,
   };
  }
