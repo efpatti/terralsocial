@@ -9,10 +9,10 @@ const LogoHeader = () => {
    initial={{ opacity: 0, y: -20 }}
    animate={{ opacity: 1, y: 0 }}
    transition={{ duration: 0.6, ease: "easeOut" }}
-   className="py-6 flex flex-col items-center bg-gradient-to-b from-white to-gray-50"
+   className="py-3 flex flex-col items-center bg-gradient-to-b from-white to-gray-50"
   >
    {/* Logo MAIOR */}
-   <div className="w-[100px] h-[100px] md:w-[120px] md:h-[120px] relative mb-3">
+   <div className="w-[80px] h-[80px] md:w-[100px] md:h-[100px] relative mb-2">
     <Image
      src="/terral.png"
      alt="Logo TERRAL Social"
@@ -24,14 +24,11 @@ const LogoHeader = () => {
 
    {/* Textos com hierarquia forte */}
    <div className="text-center">
-    <h1 className="text-4xl md:text-5xl font-semibold tracking-wider">
+    <h1 className="text-3xl md:text-4xl font-semibold tracking-wider">
      TERRAL
     </h1>
-    <p className="text-sm md:text-base font-medium tracking-[0.4em] mt-1">
+    <p className="text-sm md:text-base font-medium tracking-[0.4em]">
      SOCIAL
-    </p>
-    <p className="text-xs text-gray-500 mt-2 max-w-md px-4">
-     Transformando vidas através da arte e educação
     </p>
    </div>
   </motion.div>

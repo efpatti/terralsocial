@@ -13,7 +13,7 @@ const Navbar = () => {
 
  return (
   <nav
-   className="shadow-sm relative z-50 bg-white border-t-2"
+   className="shadow-sm relative z-50 bg-white shadow-top p-3"
    style={{ borderColor: terralTheme.colors.primary }}
   >
    {/* Desktop: Tudo alinhado horizontalmente */}
@@ -145,7 +145,7 @@ const Navbar = () => {
        animate={{ opacity: 1, height: "auto" }}
        exit={{ opacity: 0, height: 0 }}
        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-       className="flex flex-col items-stretch gap-1 py-2 px-2 overflow-hidden bg-gray-50 border-t"
+       className="flex flex-col items-stretch gap-1 py-2 px-2 overflow-hidden bg-gray-50"
       >
        {items.map((item, idx) =>
         "href" in item ? (
@@ -188,7 +188,7 @@ const Navbar = () => {
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
-        className="mt-2 pt-2 border-t"
+        className="mt-2 pt-2"
        >
         <Link href="/voluntario" onClick={() => setIsOpen(false)}>
          <div
