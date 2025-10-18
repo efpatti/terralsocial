@@ -21,6 +21,7 @@ import {
  ChevronRight,
  Target,
 } from "lucide-react";
+import { prefix } from "@/lib/imageHelper";
 
 // Hook para animar contadores
 function useCounter(target: number, duration: number = 2) {
@@ -254,7 +255,7 @@ function OficinasSection() {
         }}
        >
         <Image
-         src={image}
+         src={prefix(image)}
          alt={`Oficina ${index + 1} - Terral Social`}
          fill
          className="object-cover"

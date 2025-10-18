@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { X, Copy, CheckCircle2, Download } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { prefix } from "@/lib/imageHelper";
 
 interface PixModalProps {
  isOpen: boolean;
@@ -78,7 +79,7 @@ export default function PixModal({
      <div className="flex justify-center">
       <div className="bg-white p-4 rounded-xl border-4 border-gray-200">
        <Image
-        src={`data:image/png;base64,${qrCodeBase64}`}
+        src={prefix(`data:image/png;base64,${qrCodeBase64}`)}
         alt="QR Code PIX"
         width={200}
         height={200}

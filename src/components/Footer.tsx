@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Instagram, Mail, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { prefix } from "@/lib/imageHelper";
 
 const TerralFooter = () => {
  const currentYear = new Date().getFullYear();
@@ -29,7 +30,7 @@ const TerralFooter = () => {
      >
       <div className="w-16 h-16 relative mb-3">
        <Image
-        src="/terral.png"
+        src={prefix("/terral.png")}
         alt="Logo TERRAL Social"
         fill
         className="object-contain"
