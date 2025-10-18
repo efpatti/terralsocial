@@ -59,7 +59,7 @@ const Navbar = () => {
      animate={{ opacity: 1, x: 0 }}
      transition={{ duration: 0.5, ease: "easeOut" }}
     >
-     <Link href="/doar">
+     <Link href="/como-ajudar/doe-agora">
       <Button
        className="text-white font-semibold px-6 py-2 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2"
        style={{ backgroundColor: terralTheme.colors.primary }}

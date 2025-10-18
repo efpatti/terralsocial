@@ -60,6 +60,7 @@ const rawItems = [
    { label: "Seja Cliente do Bazar" },
    { label: "Seja voluntário" },
    { label: "Seja parceiro" },
+   { label: "Doe Agora" },
   ],
  },
  { label: "Fale conosco" },
