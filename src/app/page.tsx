@@ -1,13 +1,13 @@
 "use client";
 
-import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
  ArrowRight,
  ArrowLeft,
  Heart,
  Users,
- Calendar,
  Gift,
  TrendingUp,
 } from "lucide-react";
@@ -332,10 +332,13 @@ export default function Home() {
         pessoas
        </p>
        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <button className="bg-white text-[#499D4B] font-bold px-8 py-4 rounded-full hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+        <Link
+         href="/doe-agora"
+         className="bg-white text-[#499D4B] font-bold px-8 py-4 rounded-full hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+        >
          <Heart size={20} fill="currentColor" />
          Doar Agora
-        </button>
+        </Link>
         <button className="bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-full hover:bg-white/20 transition-all flex items-center justify-center gap-2">
          <Users size={20} />
          Seja Voluntário
