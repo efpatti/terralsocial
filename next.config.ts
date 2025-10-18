@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig: NextConfig = {
  output: "export",
 
- // GitHub Pages deployment
- basePath: process.env.NODE_ENV === "production" ? "/terralsocial" : "",
- assetPrefix: process.env.NODE_ENV === "production" ? "/terralsocial/" : "",
+ // GitHub Pages deployment - sempre usa o basePath em produção
+ basePath: "/terralsocial",
 
  // Disable image optimization for static export
  images: {
