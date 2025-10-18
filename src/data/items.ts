@@ -42,8 +42,6 @@ const rawItems = [
   subitems: [
    { label: "Nossa História" },
    { label: "Nossa Sede" },
-   { label: "Missão e Visão" },
-   { label: "Parcerias" },
    { label: "Depoimentos" },
   ],
  },

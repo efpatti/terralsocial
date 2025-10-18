@@ -14,7 +14,6 @@ import {
  DollarSign,
  ArrowLeft,
  ChevronRight,
- Star,
  Shirt,
  Sparkles,
 } from "lucide-react";
@@ -71,25 +70,6 @@ const benefits = [
   title: "Impacto Comunitário",
   description: "Ajuda centenas de famílias do Terreirão",
   color: "#F59E0B",
- },
-];
-
-const testimonials = [
- {
-  name: "Ana Paula",
-  text:
-   "Encontrei roupas lindas por preços incríveis! E ainda ajudo a comunidade.",
-  rating: 5,
- },
- {
-  name: "Carlos Silva",
-  text: "O bazar tem artesanato maravilhoso. Compro presentes aqui sempre.",
-  rating: 5,
- },
- {
-  name: "Mariana Costa",
-  text: "Atendimento excelente e produtos de qualidade. Super recomendo!",
-  rating: 5,
  },
 ];
 
@@ -342,11 +322,11 @@ export default function SejaClienteDoBazar() {
          <div>
           <h3 className="font-bold mb-1">Endereço</h3>
           <p className="text-gray-600">
-           Rua da Terral Social, 123
+           R. Sen. Rui Carneiro, 601
            <br />
-           Terreirão - Cidade/Estado
+           Recreio dos Bandeirantes
            <br />
-           CEP: 12345-678
+           Rio de Janeiro - RJ
           </p>
          </div>
         </div>
@@ -390,67 +370,45 @@ export default function SejaClienteDoBazar() {
       </div>
      </motion.div>
 
-     {/* Mapa ou Imagem */}
+     {/* Google Maps Street View */}
      <motion.div
       initial={{ opacity: 0, x: 20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
-      className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-8 shadow-lg border-2 border-blue-300 flex items-center justify-center"
+      className="lg:sticky lg:top-8 h-fit"
      >
-      <div className="text-center">
-       <MapPin size={64} className="text-[#3ca0e7] mx-auto mb-4" />
-       <h3 className="text-2xl font-black text-gray-800 mb-2">
-        Venha nos Visitar!
-       </h3>
-       <p className="text-gray-700 mb-6">
-        Estamos no coração do Terreirão, esperando por você.
-       </p>
-       <a
-        href="https://maps.google.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 bg-[#3ca0e7] text-white font-bold px-6 py-3 rounded-full hover:bg-[#2a7bb8] transition-all shadow-lg"
-       >
-        <MapPin size={20} />
-        Ver no Mapa
-       </a>
+      <div className="bg-white rounded-2xl shadow-2xl border-2 border-gray-100 overflow-hidden">
+       <div className="bg-gradient-to-r from-[#3ca0e7] to-[#2a7bb8] p-4 text-white">
+        <h2 className="text-xl font-black flex items-center gap-2">
+         <MapPin size={24} />
+         Visualização da Rua
+        </h2>
+       </div>
+       <div className="relative w-full" style={{ paddingBottom: "75%" }}>
+        <iframe
+         src="https://www.google.com/maps/embed?pb=!4v1729267891234!6m8!1m7!1sCAoSLEFGMVFpcE9xTHhXNXJ6aWRVLWdKX3ZzaWtoUXBYQ3VXS05oZkNNcVN6a0Ez!2m2!1d-23.0177!2d-43.4639!3f0!4f0!5f0.7820865974627469"
+         className="absolute top-0 left-0 w-full h-full"
+         style={{ border: 0 }}
+         allowFullScreen
+         loading="lazy"
+         referrerPolicy="no-referrer-when-downgrade"
+         title="Google Street View - Bazar Terral"
+        />
+       </div>
+       <div className="p-4 bg-gray-50">
+        <a
+         href="https://www.google.com/maps/place/R.+Sen.+Rui+Carneiro,+601+-+Recreio+dos+Bandeirantes,+Rio+de+Janeiro+-+RJ/@-23.0177,-43.4639,17z"
+         target="_blank"
+         rel="noopener noreferrer"
+         className="text-[#3ca0e7] font-bold hover:underline flex items-center gap-2 justify-center"
+        >
+         <MapPin size={18} />
+         Abrir no Google Maps
+        </a>
+       </div>
       </div>
      </motion.div>
     </div>
-
-    {/* Depoimentos */}
-    <motion.section
-     initial={{ opacity: 0, y: 20 }}
-     whileInView={{ opacity: 1, y: 0 }}
-     viewport={{ once: true }}
-     className="mb-16"
-    >
-     <h2 className="text-3xl md:text-4xl font-black text-center mb-12">
-      O que dizem nossos <span className="text-[#3ca0e7]">clientes</span>
-     </h2>
-     <div className="grid md:grid-cols-3 gap-6">
-      {testimonials.map((testimonial, index) => (
-       <motion.div
-        key={index}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: index * 0.1 }}
-        className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100"
-       >
-        <div className="flex gap-1 mb-4">
-         {[...Array(testimonial.rating)].map((_, i) => (
-          <Star key={i} size={18} className="text-yellow-400 fill-yellow-400" />
-         ))}
-        </div>
-        <p className="text-gray-700 mb-4 italic">
-         &ldquo;{testimonial.text}&rdquo;
-        </p>
-        <p className="font-bold text-gray-800">{testimonial.name}</p>
-       </motion.div>
-      ))}
-     </div>
-    </motion.section>
 
     {/* CTA Final */}
     <motion.div

@@ -19,6 +19,7 @@ import {
  Theater,
  ChevronLeft,
  ChevronRight,
+ Target,
 } from "lucide-react";
 
 // Hook para animar contadores
@@ -477,6 +478,109 @@ export default function Home() {
        aria-label={`Ir para slide ${index + 1}`}
       />
      ))}
+    </div>
+   </section>
+
+   {/* Sobre Nós Section */}
+   <section className="py-20 px-4 bg-gradient-to-br from-[#FFFBF5] via-white to-blue-50">
+    <div className="max-w-7xl mx-auto">
+     <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="text-center mb-16"
+     >
+      <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
+       Sobre <span className="text-[#499D4B]">Nós</span>
+      </h2>
+     </motion.div>
+
+     <div className="grid md:grid-cols-2 gap-12 items-center">
+      {/* Lado Esquerdo - Stats Highlights */}
+      <motion.div
+       initial={{ opacity: 0, x: -30 }}
+       whileInView={{ opacity: 1, x: 0 }}
+       viewport={{ once: true }}
+       transition={{ duration: 0.6 }}
+       className="space-y-6"
+      >
+       <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-100">
+        <div className="flex items-center gap-4 mb-4">
+         <div className="w-16 h-16 rounded-xl bg-green-100 flex items-center justify-center">
+          <Users size={32} className="text-[#499D4B]" />
+         </div>
+         <div>
+          <div className="text-4xl font-black text-[#499D4B]">+200</div>
+          <div className="text-gray-600 font-semibold">Pessoas assistidas</div>
+         </div>
+        </div>
+       </div>
+
+       <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-100">
+        <div className="flex items-center gap-4 mb-4">
+         <div className="w-16 h-16 rounded-xl bg-blue-100 flex items-center justify-center">
+          <BookOpen size={32} className="text-[#3ca0e7]" />
+         </div>
+         <div>
+          <div className="text-4xl font-black text-[#3ca0e7]">+1000</div>
+          <div className="text-gray-600 font-semibold">Aulas & Oficinas</div>
+         </div>
+        </div>
+       </div>
+      </motion.div>
+
+      {/* Lado Direito - Propósito e Visão */}
+      <motion.div
+       initial={{ opacity: 0, x: 30 }}
+       whileInView={{ opacity: 1, x: 0 }}
+       viewport={{ once: true }}
+       transition={{ duration: 0.6 }}
+       className="space-y-8"
+      >
+       <div className="bg-gradient-to-br from-green-50 to-white rounded-2xl p-8 border-2 border-green-200">
+        <div className="flex items-start gap-4">
+         <div className="w-12 h-12 rounded-xl bg-[#499D4B] flex items-center justify-center flex-shrink-0">
+          <Target size={24} className="text-white" />
+         </div>
+         <div>
+          <h3 className="text-2xl font-black text-gray-800 mb-3">
+           Nosso Propósito
+          </h3>
+          <p className="text-gray-700 leading-relaxed text-lg">
+           Fomentar a construção de uma comunidade mais livre e igualitária.
+          </p>
+         </div>
+        </div>
+       </div>
+
+       <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 border-2 border-blue-200">
+        <div className="flex items-start gap-4">
+         <div className="w-12 h-12 rounded-xl bg-[#3ca0e7] flex items-center justify-center flex-shrink-0">
+          <TrendingUp size={24} className="text-white" />
+         </div>
+         <div>
+          <h3 className="text-2xl font-black text-gray-800 mb-3">
+           Nossa Visão
+          </h3>
+          <p className="text-gray-700 leading-relaxed text-lg">
+           Ser referência e inspiração no combate ao preconceito de diferentes
+           por meio da transformação de comunidades.
+          </p>
+         </div>
+        </div>
+       </div>
+
+       <div className="text-center pt-4">
+        <Link
+         href="/quem-somos/nossa-historia"
+         className="inline-flex items-center gap-2 text-[#499D4B] font-bold hover:underline"
+        >
+         Conheça nossa história completa
+         <ArrowRight size={20} />
+        </Link>
+       </div>
+      </motion.div>
+     </div>
     </div>
    </section>
 

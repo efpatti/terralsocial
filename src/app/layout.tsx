@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
+import DynamicTitle from "@/components/DynamicTitle";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -30,11 +32,13 @@ export default function RootLayout({
     className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
     suppressHydrationWarning
    >
+    <DynamicTitle />
     <Header />
     <main className="flex-1">{children}</main>
     <div className="p-2">
      <Footer />
     </div>
+    <ScrollToTopButton />
    </body>
   </html>
  );
