@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { terralTheme } from "@/constants/theme";
 import { motion } from "framer-motion";
 
 const LogoHeader = () => {
