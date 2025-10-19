@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { prefix } from "@/lib/imageHelper";
 
 const LogoHeader = () => {
  return (
@@ -17,7 +16,7 @@ const LogoHeader = () => {
    <Link href="/" className="flex items-center gap-2 mb-2">
     <div className="relative w-20 h-20 md:w-[100px] md:h-[100px]">
      <Image
-      src={prefix("/terral.png")}
+      src={"/terral.png"}
       alt="Logo TERRAL Social"
       fill
       className="object-contain drop-shadow-md"
