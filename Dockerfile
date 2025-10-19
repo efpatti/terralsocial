@@ -12,8 +12,9 @@ COPY package.json package-lock.json* ./
 # Copiar o schema do Prisma
 COPY prisma ./prisma
 
-# Instalar dependências de produção (mais rápido e seguro)
-RUN npm ci --omit=dev
+# Instalar TODAS as dependências (inclui dev) para permitir o build com Tailwind/PostCSS
+# Obs: a imagem final de produção continua enxuta pois copiamos apenas o standalone
+RUN npm ci
 
 # =================================
 # Estágio 2: Build
@@ -21,7 +22,7 @@ RUN npm ci --omit=dev
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Copiar dependências do estágio anterior
+# Copiar dependências do estágio anterior (inclui devDependencies)
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/prisma ./prisma
