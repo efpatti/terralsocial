@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { getApiUrl } from "@/lib/api";
 import { useState } from "react";
 import {
  Users,
@@ -148,17 +149,32 @@ export default function SejaVoluntario() {
   setSubmitError(null);
 
   try {
-   // Simular envio (substituir por API real)
-   await new Promise((resolve) => setTimeout(resolve, 2000));
+   // Enviar dados para a API
+   const response = await fetch(getApiUrl("/api/volunteers"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+   });
 
-   // TODO: Implementar envio real do formulário
-   // const response = await fetch('/api/volunteer-application', {
-   //   method: 'POST',
-   //   headers: { 'Content-Type': 'application/json' },
-   //   body: JSON.stringify(formData),
-   // });
+   const data = await response.json();
 
-   console.log("Formulário enviado:", formData);
+   if (!response.ok) {
+    // Tratar erros específicos
+    if (response.status === 409) {
+     setSubmitError(data.error || "Este e-mail já está cadastrado.");
+    } else if (response.status === 400) {
+     setSubmitError(
+      data.message || "Por favor, verifique os dados informados."
+     );
+    } else {
+     setSubmitError(
+      data.message || "Erro ao enviar formulário. Tente novamente."
+     );
+    }
+    return;
+   }
+
+   console.log("✅ Voluntário cadastrado:", data);
 
    setSubmitSuccess(true);
    setFormData({
@@ -176,8 +192,10 @@ export default function SejaVoluntario() {
     setSubmitSuccess(false);
    }, 5000);
   } catch (error) {
-   setSubmitError("Erro ao enviar formulário. Tente novamente.");
-   console.error(error);
+   setSubmitError(
+    "Erro ao enviar formulário. Verifique sua conexão e tente novamente."
+   );
+   console.error("❌ Erro ao enviar formulário:", error);
   } finally {
    setIsSubmitting(false);
   }

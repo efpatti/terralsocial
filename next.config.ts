@@ -4,8 +4,6 @@ import type { NextConfig } from "next";
  * @type {import('next').NextConfig}
  */
 const nextConfig: NextConfig = {
- output: "export",
-
  // GitHub Pages deployment - sempre usa o basePath em produção
  basePath: "/terralsocial",
 
@@ -15,7 +13,7 @@ const nextConfig: NextConfig = {
  },
 
  // Ensure trailing slashes
- trailingSlash: true,
+ trailingSlash: false,
 };
 
 export default nextConfig;

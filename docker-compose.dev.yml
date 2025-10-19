@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # Banco de dados PostgreSQL para desenvolvimento
+  postgres:
+    image: postgres:16-alpine
+    container_name: terralsocial-dev-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=terralsocial
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - terral-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache Redis para desenvolvimento
+  redis:
+    image: redis:7-alpine
+    container_name: terralsocial-dev-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-dev-data:/data
+    networks:
+      - terral-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  terral-dev-network:
+    driver: bridge
+
+volumes:
+  postgres-dev-data:
+  redis-dev-data:

@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Volunteer {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  phone        String
+  area         String   // Área de interesse (Educação, Artes, etc.)
+  availability String   // Disponibilidade semanal (4-8h, 8-12h, etc.)
+  experience   String?  // Experiência prévia (opcional)
+  message      String?  // Motivação/mensagem (opcional)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("volunteers")
+  @@index([email])
+  @@index([createdAt])
+}
