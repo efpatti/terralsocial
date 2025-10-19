@@ -1,4 +1,4 @@
-name: Deploy Terral Social
+name: Deploy Terral Social (main)
 
 on:
     push:
