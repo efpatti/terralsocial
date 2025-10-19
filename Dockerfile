@@ -1,51 +1,64 @@
-# Dockerfile para Next.js em produção (modo standalone)
-FROM node:22-alpine AS base
+# Dockerfile Otimizado para Next.js Standalone
 
-# 1. Instalar dependências
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# =================================
+# Estágio 1: Dependências
+# =================================
+FROM node:22-alpine AS deps
 WORKDIR /app
 
+# Copiar apenas os arquivos de manifesto de dependência
 COPY package.json package-lock.json* ./
-COPY prisma ./prisma
-RUN npm ci
 
-# 2. Build da aplicação
-FROM base AS builder
+# Copiar o schema do Prisma
+COPY prisma ./prisma
+
+# Instalar dependências de produção (mais rápido e seguro)
+RUN npm ci --omit=dev
+
+# =================================
+# Estágio 2: Build
+# =================================
+FROM node:22-alpine AS builder
 WORKDIR /app
+
+# Copiar dependências do estágio anterior
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/prisma ./prisma
+
+# Copiar o restante do código-fonte
 COPY . .
 
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Gerar Prisma Client
+# Gerar Prisma Client (essencial antes do build)
 RUN npx prisma generate
 
-# Build do Next.js
+# Build da aplicação
 RUN npm run build
 
-# 3. Imagem de produção
-FROM base AS runner
+# =================================
+# Estágio 3: Produção
+# =================================
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Criar usuário não-root para segurança
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copiar arquivos necessários
+# Copiar artefatos do build do estágio 'builder'
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Mudar para o usuário não-root
 USER nextjs
 
 EXPOSE 3000
-
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Comando para iniciar o servidor
 CMD ["node", "server.js"]
