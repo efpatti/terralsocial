@@ -7,6 +7,12 @@ set -e  # Falha se qualquer comando retornar erro
 
 DATABASE_URL="${1}"
 REDIS_URL="${2}"
+POSTGRES_USER="${3:-terral}"
+POSTGRES_PASSWORD="${4:-terral_password}"
+POSTGRES_DB="${5:-terralsocial}"
+NEXT_PUBLIC_APP_URL="${6:-http://localhost:3000}"
+MERCADOPAGO_ACCESS_TOKEN="${7:-}"
+MERCADOPAGO_PUBLIC_KEY="${8:-}"
 
 echo "========================================="
 echo "Deploy do Terral Social iniciado"
@@ -20,10 +26,21 @@ git reset --hard origin/main
 
 echo "Configurando variaveis de ambiente..."
 cat > .env << EOF
+# Aplicação
 DATABASE_URL=${DATABASE_URL}
 REDIS_URL=${REDIS_URL}
 NODE_ENV=production
 NEXT_TELEMETRY_DISABLED=1
+NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+
+# PostgreSQL (para o container)
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=${POSTGRES_DB}
+
+# MercadoPago (opcional)
+MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+MERCADOPAGO_PUBLIC_KEY=${MERCADOPAGO_PUBLIC_KEY}
 EOF
 
 echo "Parando containers existentes..."

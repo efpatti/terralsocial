@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
     container_name: terralsocial-nextjs
     restart: unless-stopped
     ports:
@@ -13,11 +15,18 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN:-}
+      - MERCADOPAGO_PUBLIC_KEY=${MERCADOPAGO_PUBLIC_KEY:-}
     networks:
       - terral-network
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # Banco de dados PostgreSQL
   postgres:
@@ -27,13 +36,18 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=terral
-      - POSTGRES_PASSWORD=terral_password
-      - POSTGRES_DB=terralsocial
+      - POSTGRES_USER=${POSTGRES_USER:-terral}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-terral_password}
+      - POSTGRES_DB=${POSTGRES_DB:-terralsocial}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - terral-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-terral}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Cache Redis
   redis:
@@ -46,6 +60,11 @@ services:
       - redis-data:/data
     networks:
       - terral-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   terral-network:
