@@ -8,6 +8,8 @@ WORKDIR /app
 
 # Instalar dependências baseado no gerenciador de pacotes preferido
 COPY package.json package-lock.json* ./
+# Copiar schema do Prisma antes de npm ci (necessário para o postinstall)
+COPY prisma ./prisma
 RUN npm ci
 
 # 2. Rebuildar o código-fonte apenas quando necessário
