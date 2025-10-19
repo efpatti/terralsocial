@@ -44,16 +44,16 @@ MERCADOPAGO_PUBLIC_KEY=${MERCADOPAGO_PUBLIC_KEY}
 EOF
 
 echo "Parando containers existentes..."
-docker-compose down --remove-orphans || echo "Nenhum container rodando"
+docker compose down --remove-orphans || echo "Nenhum container rodando"
 
 echo "Limpando recursos Docker..."
 docker system prune -f || true
 
 echo "Baixando imagens atualizadas..."
-docker-compose pull postgres redis || echo "Imagens ja atualizadas"
+docker compose pull postgres redis || echo "Imagens ja atualizadas"
 
 echo "Buildando e iniciando containers..."
-docker-compose up -d --build
+docker compose up -d --build
 
 echo "Aguardando PostgreSQL iniciar..."
 for i in {1..30}; do
@@ -72,7 +72,7 @@ echo "Executando migrations do banco..."
 docker exec terralsocial-nextjs npx prisma db push --skip-generate || echo "Migrations ja aplicadas"
 
 echo "Verificando status dos containers..."
-docker-compose ps
+docker compose ps
 
 sleep 5
 
