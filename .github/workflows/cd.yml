@@ -346,7 +346,7 @@ jobs:
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_User }}
+                  username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_KEY }}
                   port: 22
                   timeout: 3m
@@ -422,7 +422,7 @@ jobs:
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_User }}
+                  username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_KEY }}
                   port: 22
                   timeout: 2m
@@ -542,7 +542,7 @@ jobs:
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_User }}
+                  username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_KEY }}
                   port: 22
                   timeout: 5m

@@ -298,7 +298,6 @@ jobs:
         if: github.event.inputs.target_environment == 'production'
         environment:
             name: production
-            url: http://${{ secrets.VPS_HOST }}:3000
 
         steps:
             - name: Wait for approval
