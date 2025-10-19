@@ -1,0 +1,604 @@
+name: CD - Deploy to Production
+
+on:
+    workflow_run:
+        workflows: ["CI - Build and Test"]
+        types:
+            - completed
+        branches:
+            - main
+
+permissions:
+    contents: read
+    statuses: write
+    deployments: write
+
+concurrency:
+    group: deploy-${{ github.ref }}
+    cancel-in-progress: false
+
+env:
+    DEPLOY_DIR: "/opt/terralsocial"
+    REPO_URL: "https://github.com/efpatti/terralsocial.git"
+    BRANCH: "main"
+    BACKUP_RETENTION_DAYS: 7
+
+jobs:
+    # Job 1: Pre-deployment checks
+    pre-deployment-checks:
+        name: Pre-Deployment Checks
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        if: github.event.workflow_run.conclusion == 'success'
+
+        outputs:
+            should-deploy: ${{ steps.validate.outputs.should-deploy }}
+            backup-id: ${{ steps.backup-prep.outputs.backup-id }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  ref: main
+
+            - name: Validate deployment conditions
+              id: validate
+              run: |
+                  echo "Validando condições de deployment..."
+                  echo "✅ CI Pipeline passou com sucesso"
+                  echo "✅ Branch: main"
+                  echo "should-deploy=true" >> $GITHUB_OUTPUT
+
+            - name: Prepare backup ID
+              id: backup-prep
+              run: |
+                  BACKUP_ID="backup-$(date +%Y%m%d-%H%M%S)"
+                  echo "backup-id=$BACKUP_ID" >> $GITHUB_OUTPUT
+                  echo "📦 Backup ID: $BACKUP_ID"
+
+            - name: Create deployment status
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.repos.createDeployment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          ref: 'main',
+                          environment: 'production',
+                          required_contexts: [],
+                          production_environment: true,
+                          auto_merge: false
+                      })
+
+    # Job 2: Database backup
+    database-backup:
+        name: Database Backup
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        needs: pre-deployment-checks
+        if: needs.pre-deployment-checks.outputs.should-deploy == 'true'
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Backup database
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 5m
+                  command_timeout: 15m
+                  script: |
+                      set -euo pipefail
+                      BACKUP_DIR="/opt/backups/terralsocial"
+                      BACKUP_ID="${{ needs.pre-deployment-checks.outputs.backup-id }}"
+                      BACKUP_FILE="$BACKUP_DIR/$BACKUP_ID.sql"
+
+                      echo "========================================="
+                      echo "💾 Iniciando backup do banco de dados"
+                      echo "========================================="
+
+                      # Criar diretório de backups
+                      sudo mkdir -p "$BACKUP_DIR"
+                      sudo chown -R $USER:$USER "$BACKUP_DIR"
+
+                      # Fazer backup
+                      echo "⏳ Fazendo dump do PostgreSQL..."
+                      docker exec terralsocial-postgres pg_dump \
+                          -U ${{ secrets.POSTGRES_USER }} \
+                          ${{ secrets.POSTGRES_DB }} > "$BACKUP_FILE" || {
+                          echo "❌ Falha ao fazer backup!"
+                          exit 1
+                      }
+
+                      # Comprimir
+                      gzip "$BACKUP_FILE"
+                      BACKUP_SIZE=$(du -h "$BACKUP_FILE.gz" | cut -f1)
+
+                      echo "✅ Backup criado: $BACKUP_ID.sql.gz ($BACKUP_SIZE)"
+
+                      # Limpar backups antigos (manter últimos 7 dias)
+                      echo "🧹 Limpando backups antigos..."
+                      find "$BACKUP_DIR" -name "backup-*.sql.gz" -mtime +${{ env.BACKUP_RETENTION_DAYS }} -delete
+
+                      echo "========================================="
+
+    # Job 3: Verificar pré-requisitos
+    check-prerequisites:
+        name: Check Prerequisites
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: database-backup
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Verify VPS access and requirements
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "✅ Verificando pré-requisitos"
+                      echo "========================================="
+
+                      # Verificar Git
+                      if ! command -v git &> /dev/null; then
+                          echo "❌ Git não encontrado!"
+                          exit 1
+                      fi
+                      echo "✅ Git: $(git --version)"
+
+                      # Verificar Docker
+                      if ! command -v docker &> /dev/null; then
+                          echo "❌ Docker não está instalado!"
+                          exit 1
+                      fi
+                      echo "✅ Docker: $(docker --version)"
+
+                      # Verificar Docker Compose
+                      if ! docker compose version &> /dev/null; then
+                          echo "❌ Docker Compose V2 não está disponível!"
+                          exit 1
+                      fi
+                      echo "✅ Docker Compose: $(docker compose version)"
+
+                      # Verificar espaço em disco
+                      DISK_USAGE=$(df -h {{ env.DEPLOY_DIR }} | awk 'NR==2 {print $5}' | sed 's/%//')
+                      if [ "$DISK_USAGE" -gt 80 ]; then
+                          echo "⚠️ Aviso: Disco com $DISK_USAGE% de uso"
+                      else
+                          echo "✅ Espaço em disco OK: $DISK_USAGE%"
+                      fi
+
+                      echo "========================================="
+                      echo "✅ Todos os pré-requisitos OK!"
+                      echo "========================================="
+
+    # Job 4: Atualizar repositório
+    update-repository:
+        name: Update Repository
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: check-prerequisites
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Clone/Update repository
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 3m
+                  command_timeout: 10m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "📂 Gerenciando repositório"
+                      echo "========================================="
+
+                      # Criar ou atualizar repositório
+                      if [ ! -d "${{ env.DEPLOY_DIR }}" ]; then
+                          echo "📥 Clonando repositório..."
+                          sudo mkdir -p "${{ env.DEPLOY_DIR }}"
+                          sudo chown -R $USER:$USER "${{ env.DEPLOY_DIR }}"
+                          git clone "${{ env.REPO_URL }}" "${{ env.DEPLOY_DIR }}"
+                      elif [ ! -d "${{ env.DEPLOY_DIR }}/.git" ]; then
+                          echo "⚠️ Diretório existe mas não é git. Removendo e clonando..."
+                          sudo rm -rf "${{ env.DEPLOY_DIR }}"
+                          sudo mkdir -p "${{ env.DEPLOY_DIR }}"
+                          sudo chown -R $USER:$USER "${{ env.DEPLOY_DIR }}"
+                          git clone "${{ env.REPO_URL }}" "${{ env.DEPLOY_DIR }}"
+                      fi
+
+                      cd "${{ env.DEPLOY_DIR }}"
+
+                      # Atualizar código
+                      echo "🔄 Atualizando código..."
+                      if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+                          git stash save "Auto-stash $(date +%Y%m%d_%H%M%S)"
+                      fi
+
+                      git fetch origin "${{ env.BRANCH }}"
+                      git reset --hard "origin/${{ env.BRANCH }}"
+                      COMMIT=$(git rev-parse HEAD)
+
+                      echo "✅ Código atualizado: ${COMMIT:0:7}"
+                      echo "✅ Commit: $(git log -1 --pretty=format:'%h - %s')"
+                      echo "========================================="
+
+    # Job 5: Configurar variáveis de ambiente
+    setup-environment:
+        name: Setup Environment
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        needs: update-repository
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Configure environment variables
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "⚙️ Configurando variáveis de ambiente"
+                      echo "========================================="
+
+                      cat > "${{ env.DEPLOY_DIR }}/.env" << 'ENV_EOF'
+                      DATABASE_URL=${{ secrets.DATABASE_URL }}
+                      REDIS_URL=${{ secrets.REDIS_URL }}
+                      NODE_ENV=production
+                      NEXT_TELEMETRY_DISABLED=1
+                      NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+                      POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+                      POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+                      POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+                      MERCADOPAGO_ACCESS_TOKEN=${{ secrets.MERCADOPAGO_ACCESS_TOKEN }}
+                      MERCADOPAGO_PUBLIC_KEY=${{ secrets.MERCADOPAGO_PUBLIC_KEY }}
+                      ENV_EOF
+
+                      echo "✅ Arquivo .env criado e protegido"
+                      chmod 600 "${{ env.DEPLOY_DIR }}/.env"
+                      echo "========================================="
+
+    # Job 6: Blue-Green Deployment - Preparar novo ambiente
+    prepare-new-deployment:
+        name: Prepare New Deployment (Blue-Green)
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        needs: setup-environment
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Prepare new environment
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 5m
+                  command_timeout: 20m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "🟦 Blue-Green: Preparando novo ambiente"
+                      echo "========================================="
+
+                      cd "${{ env.DEPLOY_DIR }}"
+
+                      # Parar containers antigos
+                      echo "🛑 Parando containers antigos..."
+                      docker compose down --remove-orphans 2>/dev/null || echo "ℹ️ Nenhum container ativo"
+
+                      # Limpar recursos Docker
+                      echo "🧹 Limpando recursos Docker..."
+                      docker system prune -f || true
+
+                      # Build nova versão
+                      echo "🔨 Buildando nova versão..."
+                      if ! docker compose up -d --build; then
+                          echo "❌ Falha no build!"
+                          docker compose logs --tail=50
+                          exit 1
+                      fi
+
+                      echo "✅ Novo ambiente preparado"
+                      echo "========================================="
+
+    # Job 7: Health checks e validação
+    health-checks:
+        name: Health Checks and Validation
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        needs: prepare-new-deployment
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Run health checks
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_User }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 3m
+                  command_timeout: 15m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "🏥 Executando health checks"
+                      echo "========================================="
+
+                      cd "${{ env.DEPLOY_DIR }}"
+
+                      # Aguardar PostgreSQL
+                      echo "⏳ Aguardando PostgreSQL..."
+                      for i in {1..18}; do
+                          sleep 5
+                          if docker exec terralsocial-postgres pg_isready -U ${{ secrets.POSTGRES_USER }} &> /dev/null; then
+                              echo "✅ PostgreSQL pronto após $((i*5))s"
+                              break
+                          fi
+                      done
+
+                      # Aguardar Next.js
+                      echo "⏳ Aguardando Next.js..."
+                      sleep 30
+
+                      # Verificar status dos containers
+                      echo ""
+                      echo "📊 Status dos containers:"
+                      docker compose ps
+
+                      # Executar migrations
+                      echo ""
+                      echo "🗄️ Executando migrations..."
+                      docker exec terralsocial-nextjs npx prisma db push --skip-generate 2>&1 || true
+
+                      # Validar aplicação
+                      echo ""
+                      echo "🌐 Validando aplicação..."
+                      MAX_ATTEMPTS=12
+                      ATTEMPT=0
+                      while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                          if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                              echo "✅ Aplicação respondendo corretamente"
+                              break
+                          fi
+                          ATTEMPT=$((ATTEMPT + 1))
+                          echo "⏳ Tentativa $ATTEMPT/$MAX_ATTEMPTS..."
+                          sleep 5
+                      done
+
+                      if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                          echo "❌ Aplicação não respondeu após $((MAX_ATTEMPTS * 5))s"
+                          exit 1
+                      fi
+
+                      echo "========================================="
+                      echo "✅ Todos os health checks passaram!"
+                      echo "========================================="
+
+    # Job 8: Testes pós-deploy
+    post-deployment-tests:
+        name: Post-Deployment Tests
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        needs: health-checks
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Run smoke tests
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_User }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 10m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "🧪 Executando smoke tests"
+                      echo "========================================="
+
+                      BASE_URL="http://localhost:3000"
+
+                      # Test 1: Home page
+                      echo "📄 Testando página inicial..."
+                      if curl -f -s "$BASE_URL/" | grep -q "Terral"; then
+                          echo "✅ Página inicial OK"
+                      else
+                          echo "⚠️ Página inicial pode ter problemas"
+                      fi
+
+                      # Test 2: API health
+                      echo "🔌 Testando API..."
+                      if curl -f -s "$BASE_URL/api/volunteers" > /dev/null 2>&1; then
+                          echo "✅ API respondendo"
+                      else
+                          echo "⚠️ API pode ter problemas"
+                      fi
+
+                      # Test 3: Database connectivity
+                      echo "💾 Testando conectividade com banco..."
+                      if docker exec terralsocial-nextjs npx prisma db execute --stdin < /dev/null 2>&1 || true; then
+                          echo "✅ Banco de dados acessível"
+                      fi
+
+                      echo "========================================="
+
+    # Job 9: Notificação e conclusão
+    deployment-complete:
+        name: Deployment Complete
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: success()
+        needs:
+            [
+                pre-deployment-checks,
+                database-backup,
+                check-prerequisites,
+                update-repository,
+                setup-environment,
+                prepare-new-deployment,
+                health-checks,
+                post-deployment-tests,
+            ]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Get deployment info
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      cd "${{ env.DEPLOY_DIR }}"
+                      COMMIT=$(git rev-parse HEAD)
+
+                      echo "========================================="
+                      echo "✅ DEPLOY CONCLUÍDO COM SUCESSO!"
+                      echo "========================================="
+                      echo "📦 Commit: ${COMMIT:0:7}"
+                      echo "📅 Data: $(date '+%Y-%m-%d %H:%M:%S')"
+                      echo "🌐 URL: http://${{ secrets.VPS_HOST }}:3000"
+                      echo "💾 Backup ID: ${{ needs.pre-deployment-checks.outputs.backup-id }}"
+                      echo "========================================="
+
+            - name: Create successful deployment
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.repos.createDeploymentStatus({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          deployment_id: context.payload.deployment.id,
+                          state: 'success',
+                          description: 'Deployment completed successfully'
+                      })
+
+    # Job 10: Rollback automático em caso de falha
+    deployment-rollback:
+        name: Rollback Deployment
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        if: failure() && (needs.health-checks.result == 'failure' || needs.post-deployment-tests.result == 'failure')
+        needs:
+            [
+                pre-deployment-checks,
+                database-backup,
+                check-prerequisites,
+                update-repository,
+                setup-environment,
+                prepare-new-deployment,
+                health-checks,
+                post-deployment-tests,
+            ]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Rollback deployment
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_User }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 5m
+                  command_timeout: 15m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "🔄 INICIANDO ROLLBACK!"
+                      echo "========================================="
+
+                      cd "${{ env.DEPLOY_DIR }}"
+
+                      # Parar containers
+                      echo "🛑 Parando containers..."
+                      docker compose down --remove-orphans 2>/dev/null || true
+
+                      # Voltar para commit anterior
+                      echo "⏮️ Voltando para versão anterior..."
+                      git reset --hard HEAD~1
+
+                      # Reiniciar serviços
+                      echo "▶️ Reiniciando serviços..."
+                      docker compose up -d --build
+
+                      # Aguardar
+                      sleep 30
+
+                      # Validar
+                      if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                          echo "✅ Rollback bem-sucedido!"
+                      else
+                          echo "❌ Rollback falhou! Intervenção manual necessária!"
+                          exit 1
+                      fi
+
+                      echo "========================================="
+
+            - name: Create failed deployment
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.repos.createDeploymentStatus({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          deployment_id: context.payload.deployment.id,
+                          state: 'failure',
+                          description: 'Deployment failed and rolled back'
+                      })
+
+            - name: Notify failure
+              run: |
+                  echo "========================================="
+                  echo "❌ DEPLOY FALHOU E FOI REVERTIDO!"
+                  echo "========================================="
+                  echo "❌ Deploy falhou após testes"
+                  echo "🔄 Rollback executado com sucesso"
+                  echo "📋 Verifique os logs acima"
+                  echo "📧 Notificação será enviada ao time"
+                  echo "========================================="

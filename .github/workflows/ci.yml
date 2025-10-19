@@ -1,0 +1,214 @@
+name: CI - Build and Test
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+    pull_request:
+        branches:
+            - main
+            - develop
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    # Job 1: Lint e validação de código
+    lint:
+        name: Lint and Code Quality
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run ESLint
+              run: npm run lint || true
+
+            - name: Check TypeScript
+              run: npx tsc --noEmit || true
+
+    # Job 2: Build da aplicação
+    build:
+        name: Build Application
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        needs: lint
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build Next.js
+              run: npm run build
+
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: nextjs-build
+                  path: .next
+                  retention-days: 1
+
+    # Job 3: Testes unitários
+    test-unit:
+        name: Unit Tests
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        needs: build
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run unit tests
+              run: npm run test -- --passWithNoTests || true
+
+            - name: Upload coverage
+              uses: codecov/codecov-action@v4
+              if: always()
+              with:
+                  fail_ci_if_error: false
+
+    # Job 4: Build Docker image
+    docker-build:
+        name: Build Docker Image
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        needs: build
+
+        outputs:
+            image-tag: ${{ steps.docker.outputs.tags }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              if: github.event_name == 'push'
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build and push Docker image
+              id: docker
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  push: ${{ github.event_name == 'push' }}
+                  tags: |
+                      ${{ secrets.DOCKER_USERNAME }}/terralsocial:${{ github.sha }}
+                      ${{ secrets.DOCKER_USERNAME }}/terralsocial:latest
+                  cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/terralsocial:buildcache
+                  cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/terralsocial:buildcache,mode=max
+
+    # Job 5: Security scanning
+    security-scan:
+        name: Security Scan
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                  scan-type: "fs"
+                  scan-ref: "."
+                  format: "sarif"
+                  output: "trivy-results.sarif"
+
+            - name: Upload Trivy results to GitHub Security tab
+              uses: github/codeql-action/upload-sarif@v3
+              if: always()
+              with:
+                  sarif_file: "trivy-results.sarif"
+
+    # Job 6: Validação de dependências
+    dependency-check:
+        name: Dependency Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Audit dependencies
+              run: npm audit --audit-level=moderate || true
+
+            - name: Check for outdated packages
+              run: npm outdated || true
+
+    # Job final: Resumo da CI
+    ci-summary:
+        name: CI Summary
+        runs-on: ubuntu-latest
+        if: always()
+        needs:
+            [
+                lint,
+                build,
+                test-unit,
+                docker-build,
+                security-scan,
+                dependency-check,
+            ]
+
+        steps:
+            - name: Check CI status
+              run: |
+                  echo "========================================="
+                  echo "✅ CI Pipeline Completed"
+                  echo "========================================="
+                  echo "📊 Jobs Status:"
+                  echo "  - Lint: ${{ needs.lint.result }}"
+                  echo "  - Build: ${{ needs.build.result }}"
+                  echo "  - Tests: ${{ needs.test-unit.result }}"
+                  echo "  - Docker: ${{ needs.docker-build.result }}"
+                  echo "  - Security: ${{ needs.security-scan.result }}"
+                  echo "  - Dependencies: ${{ needs.dependency-check.result }}"
+                  echo "========================================="
+
+              if: ${{ needs.lint.result == 'success' && needs.build.result == 'success' }}

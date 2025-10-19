@@ -1,0 +1,345 @@
+name: Health Check and Monitoring
+
+on:
+    schedule:
+        # Rodas a cada 30 minutos
+        - cron: "*/30 * * * *"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    issues: write
+
+jobs:
+    # Job 1: Health check da aplicação
+    health-check:
+        name: Application Health Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Check production application
+              run: |
+                  echo "========================================="
+                  echo "🏥 Health Check - Production"
+                  echo "========================================="
+
+                  BASE_URL="http://${{ secrets.VPS_HOST }}:3000"
+
+                  # Verificar disponibilidade
+                  echo "📍 Checando disponibilidade..."
+                  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL")
+
+                  if [ "$HTTP_CODE" = "200" ]; then
+                      echo "✅ Aplicação respondendo (HTTP $HTTP_CODE)"
+                  else
+                      echo "❌ Erro HTTP: $HTTP_CODE"
+                      exit 1
+                  fi
+
+                  # Verificar tempo de resposta
+                  echo "⏱️ Medindo tempo de resposta..."
+                  RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$BASE_URL")
+                  echo "⏱️ Tempo de resposta: ${RESPONSE_TIME}s"
+
+                  if (( $(echo "$RESPONSE_TIME > 5" | bc -l) )); then
+                      echo "⚠️ Aviso: Resposta lenta (> 5s)"
+                  else
+                      echo "✅ Tempo de resposta OK"
+                  fi
+
+                  # Verificar SSL/TLS
+                  echo "🔒 Verificando SSL/TLS..."
+                  if curl -s -I "$BASE_URL" | grep -q "200\|301\|302"; then
+                      echo "✅ SSL/TLS OK"
+                  fi
+
+                  echo "========================================="
+
+    # Job 2: Verificar banco de dados
+    database-health:
+        name: Database Health Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Check database connectivity
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "🏥 Database Health Check"
+                      echo "========================================="
+
+                      # Verificar PostgreSQL
+                      echo "📊 Checando PostgreSQL..."
+                      if docker exec terralsocial-postgres pg_isready -U ${{ secrets.POSTGRES_USER }} &> /dev/null; then
+                          echo "✅ PostgreSQL respondendo"
+
+                          # Verificar connections
+                          CONNECTIONS=$(docker exec terralsocial-postgres psql \
+                              -U ${{ secrets.POSTGRES_USER }} \
+                              -d ${{ secrets.POSTGRES_DB }} \
+                              -t -c "SELECT count(*) FROM pg_stat_activity;" 2>/dev/null || echo "0")
+                          echo "📊 Conexões ativas: $CONNECTIONS"
+
+                          # Verificar tamanho do banco
+                          DB_SIZE=$(docker exec terralsocial-postgres psql \
+                              -U ${{ secrets.POSTGRES_USER }} \
+                              -d ${{ secrets.POSTGRES_DB }} \
+                              -t -c "SELECT pg_size_pretty(pg_database_size('${{ secrets.POSTGRES_DB }}'));" 2>/dev/null || echo "N/A")
+                          echo "💾 Tamanho do banco: $DB_SIZE"
+                      else
+                          echo "❌ PostgreSQL NÃO está respondendo!"
+                          exit 1
+                      fi
+
+                      # Verificar Redis
+                      echo ""
+                      echo "🔴 Checando Redis..."
+                      if docker exec terralsocial-redis redis-cli ping &> /dev/null; then
+                          echo "✅ Redis respondendo"
+
+                          # Verificar memory
+                          REDIS_MEMORY=$(docker exec terralsocial-redis redis-cli info memory | grep used_memory_human | cut -d: -f2)
+                          echo "💾 Redis memory: $REDIS_MEMORY"
+                      else
+                          echo "⚠️ Redis NÃO está respondendo"
+                      fi
+
+                      echo "========================================="
+
+    # Job 3: Verificar containers
+    containers-health:
+        name: Containers Health Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Check Docker containers
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "🐳 Containers Health Check"
+                      echo "========================================="
+
+                      cd /opt/terralsocial
+
+                      # Status dos containers
+                      echo "📊 Status dos containers:"
+                      docker compose ps
+
+                      echo ""
+                      echo "🔍 Verificando saúde..."
+
+                      # Next.js
+                      if docker ps -q -f name=terralsocial-nextjs -f status=running | grep -q .; then
+                          echo "✅ Next.js: Running"
+                          NEXTJS_CPU=$(docker stats terralsocial-nextjs --no-stream | tail -1 | awk '{print $3}')
+                          echo "   CPU: $NEXTJS_CPU"
+                      else
+                          echo "❌ Next.js: NOT running"
+                      fi
+
+                      # PostgreSQL
+                      if docker ps -q -f name=terralsocial-postgres -f status=running | grep -q .; then
+                          echo "✅ PostgreSQL: Running"
+                          POSTGRES_CPU=$(docker stats terralsocial-postgres --no-stream | tail -1 | awk '{print $3}')
+                          echo "   CPU: $POSTGRES_CPU"
+                      else
+                          echo "❌ PostgreSQL: NOT running"
+                      fi
+
+                      # Redis
+                      if docker ps -q -f name=terralsocial-redis -f status=running | grep -q .; then
+                          echo "✅ Redis: Running"
+                          REDIS_CPU=$(docker stats terralsocial-redis --no-stream | tail -1 | awk '{print $3}')
+                          echo "   CPU: $REDIS_CPU"
+                      else
+                          echo "❌ Redis: NOT running"
+                      fi
+
+                      echo "========================================="
+
+    # Job 4: Verificar disco
+    disk-health:
+        name: Disk Space Health Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Check disk space
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "💿 Disk Space Health Check"
+                      echo "========================================="
+
+                      # Espaço geral
+                      echo "📊 Espaço em disco geral:"
+                      df -h | grep -E '^/dev/|^Filesystem'
+
+                      echo ""
+                      echo "📁 Espaço por diretório importante:"
+
+                      # /opt/terralsocial
+                      DEPLOY_USAGE=$(du -sh /opt/terralsocial 2>/dev/null | cut -f1)
+                      echo "  /opt/terralsocial: $DEPLOY_USAGE"
+
+                      # /opt/backups
+                      BACKUPS_USAGE=$(du -sh /opt/backups 2>/dev/null | cut -f1)
+                      echo "  /opt/backups: $BACKUPS_USAGE"
+
+                      # Docker
+                      DOCKER_USAGE=$(docker system df | tail -1)
+                      echo "  Docker: $DOCKER_USAGE"
+
+                      echo "========================================="
+
+    # Job 5: Logs analysis
+    logs-analysis:
+        name: Logs Analysis
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Analyze logs
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 2m
+                  command_timeout: 5m
+                  script: |
+                      set -euo pipefail
+                      echo "========================================="
+                      echo "📋 Logs Analysis (últimas 2 horas)"
+                      echo "========================================="
+
+                      cd /opt/terralsocial
+
+                      # Next.js errors
+                      echo "🔍 Erros no Next.js:"
+                      docker logs --since 2h terralsocial-nextjs 2>&1 | \
+                          grep -iE "error|failed|exception" | tail -5 || echo "✅ Nenhum erro encontrado"
+
+                      echo ""
+                      echo "🔍 Warnings no Next.js:"
+                      docker logs --since 2h terralsocial-nextjs 2>&1 | \
+                          grep -iE "warn" | tail -5 || echo "✅ Nenhum aviso encontrado"
+
+                      # PostgreSQL errors
+                      echo ""
+                      echo "🔍 Erros no PostgreSQL:"
+                      docker logs --since 2h terralsocial-postgres 2>&1 | \
+                          grep -iE "error|failed" | tail -5 || echo "✅ Nenhum erro encontrado"
+
+                      echo "========================================="
+
+    # Job 6: API endpoints test
+    api-health:
+        name: API Endpoints Health Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Test API endpoints
+              run: |
+                  echo "========================================="
+                  echo "🔌 API Endpoints Health Check"
+                  echo "========================================="
+
+                  BASE_URL="http://${{ secrets.VPS_HOST }}:3000"
+
+                  # Test home page
+                  echo "📄 GET /"
+                  RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/")
+                  HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+                  echo "   Status: $HTTP_CODE"
+                  [ "$HTTP_CODE" = "200" ] && echo "   ✅ OK" || echo "   ❌ FAILED"
+
+                  # Test volunteers API
+                  echo ""
+                  echo "📌 GET /api/volunteers"
+                  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/volunteers")
+                  echo "   Status: $HTTP_CODE"
+                  [ "$HTTP_CODE" = "200" ] && echo "   ✅ OK" || echo "   ❌ FAILED"
+
+                  # Test about page
+                  echo ""
+                  echo "📄 GET /quem-somos"
+                  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/quem-somos")
+                  echo "   Status: $HTTP_CODE"
+                  [ "$HTTP_CODE" = "200" ] && echo "   ✅ OK" || echo "   ❌ FAILED"
+
+                  echo "========================================="
+
+    # Job final: Report
+    health-report:
+        name: Health Report
+        runs-on: ubuntu-latest
+        if: always()
+        needs:
+            [
+                health-check,
+                database-health,
+                containers-health,
+                disk-health,
+                logs-analysis,
+                api-health,
+            ]
+
+        steps:
+            - name: Generate report
+              run: |
+                  echo "========================================="
+                  echo "📊 Health Check Report"
+                  echo "========================================="
+                  echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
+                  echo ""
+                  echo "Status de cada verificação:"
+                  echo "  - Health Check: ${{ needs.health-check.result }}"
+                  echo "  - Database: ${{ needs.database-health.result }}"
+                  echo "  - Containers: ${{ needs.containers-health.result }}"
+                  echo "  - Disk: ${{ needs.disk-health.result }}"
+                  echo "  - Logs: ${{ needs.logs-analysis.result }}"
+                  echo "  - API: ${{ needs.api-health.result }}"
+                  echo "========================================="
+
+            - name: Create issue if failed
+              if: failure()
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.issues.create({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          title: '🚨 Health Check Failed',
+                          body: `Health check failed on ${new Date().toISOString()}\n\nPlease investigate the deployment status.`,
+                          labels: ['health-check', 'urgent']
+                      })

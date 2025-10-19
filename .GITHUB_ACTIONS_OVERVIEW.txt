@@ -1,0 +1,291 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                  🚀 TERRAL SOCIAL - CI/CD INFRASTRUCTURE 2.0 🚀             ║
+║                                                                              ║
+║                    Infraestrutura Profissional de Deploy                    ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         📁 ESTRUTURA DE WORKFLOWS                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  .github/workflows/
+  ├── 🟢 ci.yml                    [Lint, Build, Tests, Security]
+  ├── 🟢 tests.yml                 [Integration, E2E, Performance, A11y]
+  ├── 🔵 cd.yml                    [Deploy Auto, Backup, Rollback]
+  ├── 🟠 release.yml               [Versioning, Release Staging/Prod]
+  └── 🟡 health-check.yml          [Monitoring 24/7, Alerts]
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        📚 DOCUMENTAÇÃO COMPLETA                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  📄 CI_CD_ARCHITECTURE.md         ← Diagramas e fluxos visuais
+  📄 WORKFLOWS.md                  ← Guia detalhado de cada workflow
+  📄 GITHUB_ACTIONS_SETUP.md       ← Setup passo-a-passo + troubleshooting
+  📄 GITHUB_ACTIONS_README.md      ← Este arquivo (overview)
+  ⚙️  lighthouserc.json             ← Config Lighthouse performance
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          🎯 TOTAL DE JOBS CRIADOS                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  CI.yml ........................... 6 jobs
+  ├── Lint
+  ├── Build
+  ├── Test (Unit)
+  ├── Docker Build
+  ├── Security Scan
+  ├── Dependency Check
+  └── CI Summary
+
+  TESTS.yml ........................ 7 jobs
+  ├── Integration Tests
+  ├── Lighthouse Audit
+  ├── Bundle Analysis
+  ├── Security Tests
+  ├── E2E Tests
+  ├── Performance Monitoring
+  ├── Accessibility Tests
+  └── Tests Summary
+
+  CD.yml ........................... 10 jobs
+  ├── Pre-deployment Checks
+  ├── Database Backup
+  ├── Check Prerequisites
+  ├── Update Repository
+  ├── Setup Environment
+  ├── Cleanup Containers
+  ├── Build and Deploy
+  ├── Wait Services
+  ├── Migrations & Health
+  ├── Connectivity Test
+  ├── Deployment Complete
+  └── Deployment Rollback
+
+  RELEASE.yml ..................... 7 jobs
+  ├── Validate Release
+  ├── Build Release
+  ├── Update Version
+  ├── Deploy Staging
+  ├── Staging Tests
+  ├── Approval Production
+  ├── Deploy Production
+  ├── Create Release
+  └── Release Summary
+
+  HEALTH-CHECK.yml ................ 7 jobs
+  ├── Health Check
+  ├── Database Health
+  ├── Containers Health
+  ├── Disk Health
+  ├── Logs Analysis
+  ├── API Health
+  └── Health Report
+
+  ╔════════════════════════════════════════╗
+  ║  ✨ TOTAL: 37 JOBS PROFISSIONAIS ✨   ║
+  ╚════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        ⚙️  CARACTERÍSTICAS PRINCIPAIS                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✅ CI/CD Automático
+  ✅ 7 Tipos de Testes
+  ✅ Security Scanning
+  ✅ Blue-Green Deployment
+  ✅ Rollback Automático
+  ✅ Backup Automático
+  ✅ Health Checks
+  ✅ Monitoramento 24/7
+  ✅ Release Management
+  ✅ Performance Testing
+  ✅ Accessibility Testing
+  ✅ Docker Optimization
+  ✅ Smart Caching
+  ✅ Parallel Jobs
+  ✅ Auto Alerts
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       🔄 FLUXO DE EXECUÇÃO PADRÃO                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Developer Push
+  └─ main branch
+     │
+     ├─ 🟢 CI.yml executa (10 min)
+     │  ├─ Lint ..................... ✅
+     │  ├─ Build .................... ✅
+     │  ├─ Unit Tests ............... ✅
+     │  ├─ Docker ................... ✅
+     │  ├─ Security ................. ✅
+     │  └─ Dependencies ............. ✅
+     │
+     ├─ 🟢 TESTS.yml executa (20 min)
+     │  ├─ Integration .............. ✅
+     │  ├─ E2E ...................... ✅
+     │  ├─ Performance .............. ✅
+     │  ├─ Security Advanced ........ ✅
+     │  └─ Accessibility ............ ✅
+     │
+     └─ 🔵 CD.yml executa (25 min)
+        ├─ Pre-checks ............... ✅
+        ├─ Database Backup .......... 💾
+        ├─ Repository Update ........ 🔄
+        ├─ Container Cleanup ........ 🧹
+        ├─ Build .................... 🔨
+        ├─ Health Checks ............ 🏥
+        ├─ Migrations ............... 🗄️
+        └─ Production Live .......... ✅
+
+     Continuous Monitoring (A cada 30 min)
+     └─ 🟡 HEALTH-CHECK.yml
+        ├─ App Response ............. ✅
+        ├─ Database Status .......... ✅
+        ├─ Containers ............... ✅
+        ├─ Disk Space ............... ✅
+        ├─ API Endpoints ............ ✅
+        └─ If fails → Issue ......... 📧
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       ⏱️  TEMPOS DE EXECUÇÃO                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  CI ......................... ~10 minutes   ▓▓▓▓░░░░░░░░░░░░░ 25%
+  TESTS ...................... ~20 minutes   ▓▓▓▓▓▓▓▓░░░░░░░░░ 50%
+  CD ......................... ~25 minutes    ▓▓▓▓▓▓▓▓▓▓░░░░░░░ 62%
+  RELEASE (full) ............. ~45 minutes   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 87%
+  HEALTH CHECK ............... ~5 minutes    ▓▓░░░░░░░░░░░░░░░ 12%
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      🎓 COMO COMEÇAR (3 PASSOS)                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1️⃣  Configurar Secrets
+      GitHub → Settings → Secrets and variables → Actions
+      Configure VPS_HOST, VPS_USER, VPS_SSH_KEY, DATABASE_URL, etc.
+      → Veja GITHUB_ACTIONS_SETUP.md para lista completa
+
+  2️⃣  Testar CI
+      git push origin main
+      → GitHub Actions deve mostrar workflows executando
+      → Todos devem ficar verdes (✅)
+
+  3️⃣  Acompanhar Deploy
+      GitHub → Actions → Procurar seu commit
+      → CD deve executar automaticamente
+      → Health checks começam a rodar a cada 30 min
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      📖 DOCUMENTAÇÃO RECOMENDADA                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  LEIA PRIMEIRO:
+  1. CI_CD_ARCHITECTURE.md ........ Entender a estrutura visual
+  2. GITHUB_ACTIONS_SETUP.md ...... Configurar secrets e testar
+
+  DEPOIS:
+  3. WORKFLOWS.md ................ Detalhes de cada workflow
+  4. GITHUB_ACTIONS_README.md .... Este arquivo
+
+  PARA TROUBLESHOOTING:
+  → Veja GITHUB_ACTIONS_SETUP.md seção "Troubleshooting"
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       💡 DICAS IMPORTANTES                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  🔑 SSH Key
+     • Use Ed25519 (mais seguro)
+     • Sem passphrase em CI
+     • Rotacionar periodicamente
+
+  🔐 Secrets
+     • Nunca commitar .env
+     • Usar secrets do GitHub
+     • Revisar acesso regularmente
+
+  🧪 Testes
+     • Rodar localmente antes de push
+     • npm run lint && npm run build && npm run test
+     • Economiza tempo de CI
+
+  📊 Monitoramento
+     • Checar Actions depois de cada deploy
+     • Health checks automáticos a cada 30 min
+     • Issues criadas se algo falhar
+
+  🚨 Emergências
+     • Rollback automático em falha
+     • Manual com: git reset --hard HEAD~1
+     • SSH ao VPS se precisar debug
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                       ✨ CASOS DE USO                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  📝 Dev commitando código
+  └─ CI/Tests rodas automaticamente
+     └─ Se tudo OK → Pode fazer merge
+        └─ Push automaticamente para produção
+
+  🎯 Time quer fazer release
+  └─ GitHub Actions → Release and Deployment
+     └─ Escolhe versão e ambiente
+        └─ Deploy automático (com aprovação para prod)
+
+  🏥 Monitorando saúde
+  └─ A cada 30 min workflows rodam
+     └─ Testam aplicação, banco, containers
+        └─ Se falhar → Issue criada automaticamente
+
+  🚨 Problema em produção
+  └─ CD detecta falha
+     └─ Rollback automático para versão anterior
+        └─ Aplicação volta ao normal
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    🎊 BENEFÍCIOS PARA SEU TIME                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  👨‍💻 Developers
+     ✓ Feedback imediato (erros descobertos rápido)
+     ✓ Qualidade garantida (linting, testes automáticos)
+     ✓ Menos trabalho manual (CI/CD automático)
+
+  🔧 DevOps/SRE
+     ✓ Deploy previsível e seguro
+     ✓ Rollback automático em falhas
+     ✓ Monitoramento 24/7 automático
+     ✓ Backup antes de cada deploy
+
+  👥 Product/Gerência
+     ✓ Releases mais rápidas
+     ✓ Qualidade melhor
+     ✓ Menos downtimes
+     ✓ Rastreamento completo
+
+  🏢 Empresa
+     ✓ Infraestrutura profissional
+     ✓ Escalável e confiável
+     ✓ Compliance e auditoria
+     ✓ Reduz custos operacionais
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    ✅ INFRAESTRUTURA PRONTA PARA PRODUÇÃO ✅                ║
+║                                                                              ║
+║              Segura • Rápida • Confiável • Escalável • Profissional         ║
+║                                                                              ║
+║                        Para qualquer dúvida: leia WORKFLOWS.md              ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Criado em: Outubro 2025
+Versão: 2.0.0
+Autor: GitHub Copilot
+Projeto: Terral Social - Infraestrutura de CI/CD
+
