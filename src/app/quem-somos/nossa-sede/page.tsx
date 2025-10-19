@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Clock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { contact } from "@/constants/contact";
 
 export default function NossaSedesPage() {
  return (
@@ -71,10 +72,10 @@ export default function NossaSedesPage() {
          <div>
           <h3 className="font-bold text-gray-800 mb-1">Telefone</h3>
           <a
-           href="tel:+5521999999999"
+           href={`tel:${contact.phone}`}
            className="text-gray-600 hover:text-[#499D4B] transition-colors"
           >
-           (21) 99999-9999
+           {contact.phone}
           </a>
          </div>
         </div>
@@ -86,10 +87,10 @@ export default function NossaSedesPage() {
          <div>
           <h3 className="font-bold text-gray-800 mb-1">E-mail</h3>
           <a
-           href="mailto:contato@terralsocial.org.br"
+           href="mailto:terralsocial@gmail.com"
            className="text-gray-600 hover:text-[#499D4B] transition-colors"
           >
-           contato@terralsocial.org.br
+           terralsocial@gmail.com
           </a>
          </div>
         </div>

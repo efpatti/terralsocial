@@ -9,6 +9,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
  title: "Terral Social",
  description: "Transformando vidas através da educação e da arte.",
+ icons: {
+  icon: "/terral.png",
+  shortcut: "/terral.png",
+  apple: "/terral.png",
+ },
 };
 
 export default function RootLayout({

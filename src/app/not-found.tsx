@@ -166,10 +166,10 @@ export default function NotFound() {
       <p className="text-sm text-gray-700">
        <strong>Precisa de ajuda?</strong> Entre em contato conosco:{" "}
        <a
-        href="mailto:contato@terralsocial.org.br"
+        href="mailto:terralsocial@gmail.com"
         className="text-[#499D4B] font-bold hover:underline"
        >
-        contato@terralsocial.org.br
+        terralsocial@gmail.com
        </a>
       </p>
      </div>

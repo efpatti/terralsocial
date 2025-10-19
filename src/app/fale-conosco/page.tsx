@@ -16,6 +16,7 @@ import {
  Clock,
 } from "lucide-react";
 import Link from "next/link";
+import { contact } from "@/constants/contact";
 
 export default function FaleConoscoPage() {
  const [isSubmitting, setIsSubmitting] = useState(false);
@@ -144,7 +145,7 @@ export default function FaleConoscoPage() {
            href="tel:+5521999999999"
            className="text-gray-600 hover:text-[#499D4B] transition-colors"
           >
-           (21) 99999-9999
+           {contact.phone}
           </a>
           <p className="text-sm text-gray-500 mt-1">
            Segunda a Sexta: 9h às 18h
@@ -159,10 +160,10 @@ export default function FaleConoscoPage() {
          <div>
           <h3 className="font-bold text-gray-800 mb-1">E-mail</h3>
           <a
-           href="mailto:contato@terralsocial.org.br"
+           href="mailto:terralsocial@gmail.com"
            className="text-gray-600 hover:text-[#499D4B] transition-colors"
           >
-           contato@terralsocial.org.br
+           terralsocial@gmail.com
           </a>
           <p className="text-sm text-gray-500 mt-1">
            Respondemos em até 24 horas
