@@ -1,54 +1,52 @@
-# Dockerfile para Next.js com output: export (static export)
+# Dockerfile para Next.js em produção (modo standalone)
 FROM node:22-alpine AS base
 
-# 1. Instalar dependências apenas quando necessário
+# 1. Instalar dependências
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Instalar dependências baseado no gerenciador de pacotes preferido
 COPY package.json package-lock.json* ./
-# Copiar schema do Prisma antes de npm ci (necessário para o postinstall)
 COPY prisma ./prisma
 RUN npm ci
 
-# 2. Rebuildar o código-fonte apenas quando necessário
+# 2. Build da aplicação
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Desabilitar telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Gerar Prisma Client antes do build
+# Gerar Prisma Client
 RUN npx prisma generate
 
-# Build do Next.js que gera a pasta 'out' com arquivos estáticos
+# Build do Next.js
 RUN npm run build
 
-# 3. Imagem de produção: servir arquivos estáticos com serve
+# 3. Imagem de produção
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Criar usuário não-root para segurança
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Instalar 'serve' globalmente para servir arquivos estáticos
-RUN npm install -g serve
-
-# Copiar os arquivos estáticos buildados da etapa anterior
-COPY --from=builder --chown=nextjs:nodejs /app/out ./out
+# Copiar arquivos necessários
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Comando para servir os arquivos estáticos
+CMD ["node", "server.js"]
 CMD ["serve", "out", "-l", "3000"]

@@ -1,6 +1,5 @@
 name: Deploy Terral Social to VPS
 
-# Trigger: executa o workflow em push para a branch main
 on:
     push:
         branches:
@@ -10,118 +9,51 @@ jobs:
     deploy:
         name: Deploy via Docker
         runs-on: ubuntu-latest
+        timeout-minutes: 30
 
         steps:
-            # Passo 1: Fazer checkout do código do repositório
             - name: Checkout code
               uses: actions/checkout@v4
 
-            # Passo 2: Deploy no VPS (copia script e executa)
             - name: Deploy to VPS
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_KEY }}
+                  command_timeout: 30m
+                  envs: DATABASE_URL,REDIS_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,NEXT_PUBLIC_APP_URL,MERCADOPAGO_ACCESS_TOKEN,MERCADOPAGO_PUBLIC_KEY
                   script: |
-                      cd /opt/terralsocial || { echo "Erro: Diretorio nao encontrado"; exit 1; }
+                      # Exportar variáveis de ambiente para o script
+                      export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+                      export REDIS_URL="${{ secrets.REDIS_URL }}"
+                      export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
+                      export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+                      export POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
+                      export NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+                      export MERCADOPAGO_ACCESS_TOKEN="${{ secrets.MERCADOPAGO_ACCESS_TOKEN }}"
+                      export MERCADOPAGO_PUBLIC_KEY="${{ secrets.MERCADOPAGO_PUBLIC_KEY }}"
 
-                      echo "========================================="
-                      echo "Deploy do Terral Social iniciado"
-                      echo "========================================="
+                      # Baixar script de deploy profissional
+                      curl -fsSL https://raw.githubusercontent.com/efpatti/terralsocial/main/scripts/professional-deploy.sh -o /tmp/deploy.sh
+                      chmod +x /tmp/deploy.sh
 
-                      echo "Atualizando codigo do repositorio..."
-                      git fetch origin main
-                      git reset --hard origin/main
+                      # Executar deploy
+                      /tmp/deploy.sh
 
-                      echo "Configurando variaveis de ambiente..."
-                      cat > .env << 'ENV_EOF'
-                      DATABASE_URL=${{ secrets.DATABASE_URL }}
-                      REDIS_URL=${{ secrets.REDIS_URL }}
-                      NODE_ENV=production
-                      NEXT_TELEMETRY_DISABLED=1
-                      NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
-                      POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-                      POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-                      POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-                      MERCADOPAGO_ACCESS_TOKEN=${{ secrets.MERCADOPAGO_ACCESS_TOKEN }}
-                      MERCADOPAGO_PUBLIC_KEY=${{ secrets.MERCADOPAGO_PUBLIC_KEY }}
-                      ENV_EOF
-
-                      echo "Parando containers existentes..."
-                      docker compose down --remove-orphans || echo "Nenhum container rodando"
-
-                      echo "Limpando recursos Docker..."
-                      docker system prune -f || true
-
-                      echo "Removendo volumes antigos (se necessário)..."
-                      # Comentado por segurança - descomente se quiser resetar o banco
-                      # docker volume rm terralsocial_postgres-data terralsocial_redis-data 2>/dev/null || true
-
-                      echo "Buildando e iniciando containers..."
-                      docker compose up -d --build
-
-                      if [ $? -ne 0 ]; then
-                        echo "ERRO: Falha ao buildar/iniciar containers!"
-                        echo "Logs do Docker Compose:"
-                        docker compose logs --tail=100
-                        exit 1
-                      fi
-
-                      echo "Aguardando containers iniciarem e healthchecks passarem..."
-                      echo "Isso pode levar até 30 segundos..."
-                      sleep 30
-
-                      echo ""
-                      echo "Status atual dos containers:"
-                      docker compose ps
-
-                      echo "Executando migrations do banco..."
-                      docker exec terralsocial-nextjs npx prisma db push --skip-generate || echo "Migrations ja aplicadas"
-
-                      echo "Verificando status dos containers..."
-                      docker compose ps
-
-                      # Verificar se os containers estão realmente rodando
-                      echo ""
-                      echo "Containers rodando:"
-                      docker ps --filter "name=terralsocial" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-                      # Verificar se o container Next.js está rodando
-                      if [ "$(docker ps -q -f name=terralsocial-nextjs -f status=running)" ]; then
-                        echo "✓ Container Next.js está rodando"
-                        echo "Logs recentes do Next.js:"
-                        docker logs terralsocial-nextjs --tail 30
-                      else
-                        echo "✗ ERRO: Container Next.js não está rodando!"
-                        echo "Logs completos do Next.js:"
-                        docker logs terralsocial-nextjs --tail 100 || echo "Container nao encontrado"
-                        exit 1
-                      fi
-
-                      # Verificar se o container PostgreSQL está rodando
-                      if [ "$(docker ps -q -f name=terralsocial-postgres -f status=running)" ]; then
-                        echo "✓ Container PostgreSQL está rodando"
-                      else
-                        echo "✗ AVISO: Container PostgreSQL não está rodando!"
-                        docker logs terralsocial-postgres --tail 50 || echo "Container nao encontrado"
-                      fi
-
-                      # Verificar se o container Redis está rodando
-                      if [ "$(docker ps -q -f name=terralsocial-redis -f status=running)" ]; then
-                        echo "✓ Container Redis está rodando"
-                      else
-                        echo "✗ AVISO: Container Redis não está rodando!"
-                        docker logs terralsocial-redis --tail 50 || echo "Container nao encontrado"
-                      fi
-
-                      echo "========================================="
-                      echo "Deploy concluido com sucesso!"
-                      echo "========================================="
-
-            # Passo 3: Notificar resultado do deploy
-            - name: Deployment status
+            - name: Deployment Summary
               if: success()
               run: |
-                  echo "Deploy realizado com sucesso!"
-                  echo "Aplicacao disponivel em: http://${{ secrets.VPS_HOST }}:3000"
+                  echo "✅ Deploy realizado com sucesso!"
+                  echo "🚀 Aplicação disponível em: http://${{ secrets.VPS_HOST }}:3000"
+                  echo "📝 Confira os logs acima para detalhes"
+
+            - name: Deployment Failed
+              if: failure()
+              run: |
+                  echo "❌ Deploy falhou!"
+                  echo "📋 Verifique os logs acima para identificar o problema"
+                  echo "🔧 Comandos de debug no VPS:"
+                  echo "   docker compose logs -f"
+                  echo "   docker ps -a"
+                  exit 1

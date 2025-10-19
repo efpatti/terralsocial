@@ -4,10 +4,10 @@ import type { NextConfig } from "next";
  * @type {import('next').NextConfig}
  */
 const nextConfig: NextConfig = {
- // GitHub Pages deployment - sempre usa o basePath em produção
- basePath: "/terralsocial",
+ // Output standalone para Docker
+ output: "standalone",
 
- // Disable image optimization for static export
+ // Disable image optimization for Docker
  images: {
   unoptimized: true,
  },
