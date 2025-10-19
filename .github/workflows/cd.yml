@@ -388,8 +388,9 @@ jobs:
                       echo "🌐 Validando aplicação..."
                       MAX_ATTEMPTS=12
                       ATTEMPT=0
+                      APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
                       while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-                          if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                          if curl -f -s "$APP_URL" > /dev/null 2>&1; then
                               echo "✅ Aplicação respondendo corretamente"
                               break
                           fi
@@ -433,7 +434,7 @@ jobs:
                       echo "🧪 Executando smoke tests"
                       echo "========================================="
 
-                      BASE_URL="http://localhost:3000"
+                      BASE_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
 
                       # Test 1: Home page
                       echo "📄 Testando página inicial..."
@@ -500,7 +501,7 @@ jobs:
                       echo "========================================="
                       echo "📦 Commit: ${COMMIT:0:7}"
                       echo "📅 Data: $(date '+%Y-%m-%d %H:%M:%S')"
-                      echo "🌐 URL: http://${{ secrets.VPS_HOST }}:3000"
+                      echo "🌐 URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}"
                       echo "💾 Backup ID: ${{ needs.pre-deployment-checks.outputs.backup-id }}"
                       echo "========================================="
 
@@ -571,7 +572,8 @@ jobs:
                       sleep 30
 
                       # Validar
-                      if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                      APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+                      if curl -f -s "$APP_URL" > /dev/null 2>&1; then
                           echo "✅ Rollback bem-sucedido!"
                       else
                           echo "❌ Rollback falhou! Intervenção manual necessária!"

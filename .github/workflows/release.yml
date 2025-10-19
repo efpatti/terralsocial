@@ -245,7 +245,8 @@ jobs:
 
                       # Verificar
                       sleep 30
-                      if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                      APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+                      if curl -f -s "$APP_URL" > /dev/null 2>&1; then
                           echo "✅ Deploy para Staging bem-sucedido!"
                       else
                           echo "❌ Falha na verificação!"
@@ -277,7 +278,7 @@ jobs:
             - name: Run tests against staging
               run: |
                   echo "🧪 Executando testes contra staging..."
-                  BASE_URL="http://${{ secrets.STAGING_VPS_HOST }}:3000"
+                  BASE_URL="${{secrets.NEXT_PUBLIC_APP_URL}}"
 
                   # Validar disponibilidade
                   if curl -f -s "$BASE_URL" > /dev/null 2>&1; then
@@ -391,7 +392,8 @@ jobs:
                       docker exec terralsocial-nextjs npx prisma db push --skip-generate || true
 
                       # Verificar
-                      if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                      APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+                      if curl -f -s "$APP_URL" > /dev/null 2>&1; then
                           echo "✅ Deploy para Production bem-sucedido!"
                       else
                           echo "❌ Falha na verificação!"

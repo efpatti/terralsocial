@@ -24,7 +24,7 @@ jobs:
                   echo "🏥 Health Check - Production"
                   echo "========================================="
 
-                  BASE_URL="http://${{ secrets.VPS_HOST }}:3000"
+                  BASE_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
 
                   # Verificar disponibilidade
                   echo "📍 Checando disponibilidade..."
@@ -274,7 +274,7 @@ jobs:
                   echo "🔌 API Endpoints Health Check"
                   echo "========================================="
 
-                  BASE_URL="http://${{ secrets.VPS_HOST }}:3000"
+                  BASE_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
 
                   # Test home page
                   echo "📄 GET /"
