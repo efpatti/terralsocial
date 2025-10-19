@@ -16,51 +16,28 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            # Passo 2: Configurar conexão SSH com o VPS
-            # Usa as secrets configuradas: SSH_HOST, SSH_USER, SSH_KEY
-            - name: Setup SSH connection
-              uses: webfactory/ssh-agent@v0.9.0
-              with:
-                  ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-            # Passo 3: Adicionar host SSH aos known_hosts para evitar prompt interativo
-            - name: Add VPS to known hosts
-              run: |
-                  mkdir -p ~/.ssh
-                  ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-
-            # Passo 4: Copiar script de deploy para o VPS
-            - name: Copy deploy script to VPS
-              env:
-                  SSH_HOST: ${{ secrets.VPS_HOST }}
-                  SSH_USER: ${{ secrets.VPS_USER }}
-              run: |
-                  scp scripts/deploy-vps.sh $SSH_USER@$SSH_HOST:/tmp/deploy-vps.sh
-                  ssh $SSH_USER@$SSH_HOST "chmod +x /tmp/deploy-vps.sh"
-
-            # Passo 5: Executar deploy no VPS
+            # Passo 2: Executar deploy no VPS
             - name: Execute deploy on VPS
-              env:
-                  SSH_HOST: ${{ secrets.VPS_HOST }}
-                  SSH_USER: ${{ secrets.VPS_USER }}
-                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
-                  REDIS_URL: ${{ secrets.REDIS_URL }}
-                  POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-                  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-                  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-              run: |
-                  ssh $SSH_USER@$SSH_HOST "/tmp/deploy-vps.sh \
-                    '$DATABASE_URL' \
-                    '$REDIS_URL' \
-                    '$POSTGRES_USER' \
-                    '$POSTGRES_PASSWORD' \
-                    '$POSTGRES_DB' \
-                    '$NEXT_PUBLIC_APP_URL' \
-                    '$MERCADOPAGO_ACCESS_TOKEN' \
-                    '$MERCADOPAGO_PUBLIC_KEY'"
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.VPS_SSH_KEY }}
+                  script: |
+                      # Copia e executa o script de deploy no VPS
+                      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null scripts/deploy-vps.sh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/deploy-vps.sh
+                      ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "chmod +x /tmp/deploy-vps.sh"
+                      ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "/tmp/deploy-vps.sh \
+                        '${{ secrets.DATABASE_URL }}' \
+                        '${{ secrets.REDIS_URL }}' \
+                        '${{ secrets.POSTGRES_USER }}' \
+                        '${{ secrets.POSTGRES_PASSWORD }}' \
+                        '${{ secrets.POSTGRES_DB }}' \
+                        '${{ secrets.NEXT_PUBLIC_APP_URL }}' \
+                        '${{ secrets.MERCADOPAGO_ACCESS_TOKEN }}' \
+                        '${{ secrets.MERCADOPAGO_PUBLIC_KEY }}'"
 
-            # Passo 6: Notificar resultado do deploy
+            # Passo 3: Notificar resultado do deploy
             - name: Deployment status
               if: success()
               run: |
