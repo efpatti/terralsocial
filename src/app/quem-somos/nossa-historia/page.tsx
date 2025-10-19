@@ -1,5 +1,6 @@
 "use client";
 
+import { contact } from "@/constants/contact";
 import { motion } from "framer-motion";
 import {
  Users,
@@ -405,7 +406,7 @@ export default function NossaHistoria() {
          Contato
         </a>
         <a
-         href="https://www.instagram.com/terralsocial"
+         href={contact.socials.instagram}
          target="_blank"
          rel="noreferrer"
          className="bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-full hover:bg-white/20 transition-all flex items-center justify-center gap-2"

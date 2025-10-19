@@ -5,6 +5,7 @@ import { Instagram, Mail, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { prefix } from "@/lib/imageHelper";
+import { contact } from "@/constants/contact";
 
 const TerralFooter = () => {
  const currentYear = new Date().getFullYear();
@@ -110,7 +111,7 @@ const TerralFooter = () => {
         @terralsocial
        </a>
        <a
-        href="https://www.instagram.com/bazarterral/"
+        href={contact.socials.instagram_2}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-700 transition-colors"

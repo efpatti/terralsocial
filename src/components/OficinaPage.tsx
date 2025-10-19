@@ -1,5 +1,6 @@
 "use client";
 
+import { contact } from "@/constants/contact";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
@@ -154,7 +155,7 @@ export default function OficinaPage({
     className="mt-12 text-center"
    >
     <a
-     href="https://www.instagram.com/terralsocial/"
+     href={contact.socials.instagram}
      target="_blank"
      rel="noopener noreferrer"
      className="inline-block px-8 py-4 rounded-full text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
