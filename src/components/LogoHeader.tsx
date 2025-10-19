@@ -17,7 +17,7 @@ const LogoHeader = () => {
     <div className="relative w-20 h-20 md:w-[100px] md:h-[100px]">
      <Image
       src={"/terral.png"}
-      alt="Logo TERRAL Social"
+      alt="Logo TERRAL Social 3"
       fill
       className="object-contain drop-shadow-md"
       priority
