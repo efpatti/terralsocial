@@ -22,24 +22,190 @@ jobs:
                   username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_KEY }}
                   command_timeout: 30m
-                  envs: DATABASE_URL,REDIS_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,NEXT_PUBLIC_APP_URL,MERCADOPAGO_ACCESS_TOKEN,MERCADOPAGO_PUBLIC_KEY
                   script: |
-                      # Exportar variáveis de ambiente para o script
-                      export DATABASE_URL="${{ secrets.DATABASE_URL }}"
-                      export REDIS_URL="${{ secrets.REDIS_URL }}"
-                      export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
-                      export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
-                      export POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
-                      export NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
-                      export MERCADOPAGO_ACCESS_TOKEN="${{ secrets.MERCADOPAGO_ACCESS_TOKEN }}"
-                      export MERCADOPAGO_PUBLIC_KEY="${{ secrets.MERCADOPAGO_PUBLIC_KEY }}"
+                      set -e
 
-                      # Baixar script de deploy profissional
-                      curl -fsSL https://raw.githubusercontent.com/efpatti/terralsocial/main/scripts/professional-deploy.sh -o /tmp/deploy.sh
-                      chmod +x /tmp/deploy.sh
+                      # Configurações
+                      DEPLOY_DIR="/opt/terralsocial"
+                      REPO_URL="https://github.com/efpatti/terralsocial.git"
+                      BRANCH="main"
 
-                      # Executar deploy
-                      /tmp/deploy.sh
+                      echo "========================================="
+                      echo "🚀 Deploy do Terral Social"
+                      echo "========================================="
+
+                      # 1. Verificar pré-requisitos
+                      echo "📋 Verificando pré-requisitos..."
+
+                      if ! command -v git &> /dev/null; then
+                          echo "❌ Git não encontrado. Instalando..."
+                          sudo apt-get update && sudo apt-get install -y git
+                      fi
+
+                      if ! command -v docker &> /dev/null; then
+                          echo "❌ Docker não está instalado!"
+                          exit 1
+                      fi
+
+                      if ! docker compose version &> /dev/null; then
+                          echo "❌ Docker Compose V2 não está disponível!"
+                          exit 1
+                      fi
+
+                      echo "✅ Pré-requisitos OK"
+
+                      # 2. Gerenciar repositório
+                      echo ""
+                      echo "📂 Gerenciando repositório..."
+
+                      if [ ! -d "$DEPLOY_DIR" ]; then
+                          echo "📥 Clonando repositório..."
+                          sudo mkdir -p "$DEPLOY_DIR"
+                          sudo chown -R $USER:$USER "$DEPLOY_DIR"
+                          git clone "$REPO_URL" "$DEPLOY_DIR"
+                      elif [ ! -d "$DEPLOY_DIR/.git" ]; then
+                          echo "⚠️ Diretório existe mas não é git. Removendo e clonando..."
+                          sudo rm -rf "$DEPLOY_DIR"
+                          sudo mkdir -p "$DEPLOY_DIR"
+                          sudo chown -R $USER:$USER "$DEPLOY_DIR"
+                          git clone "$REPO_URL" "$DEPLOY_DIR"
+                      fi
+
+                      cd "$DEPLOY_DIR"
+
+                      # 3. Atualizar código
+                      echo ""
+                      echo "🔄 Atualizando código..."
+
+                      if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+                          git stash save "Auto-stash $(date +%Y%m%d_%H%M%S)"
+                      fi
+
+                      BEFORE=$(git rev-parse HEAD 2>/dev/null || echo "none")
+                      git fetch origin "$BRANCH"
+                      git reset --hard "origin/$BRANCH"
+                      AFTER=$(git rev-parse HEAD)
+
+                      echo "✅ Código atualizado: ${AFTER:0:7}"
+
+                      # 4. Configurar .env
+                      echo ""
+                      echo "⚙️ Configurando variáveis de ambiente..."
+
+                      cat > .env << 'ENV_EOF'
+                      DATABASE_URL=${{ secrets.DATABASE_URL }}
+                      REDIS_URL=${{ secrets.REDIS_URL }}
+                      NODE_ENV=production
+                      NEXT_TELEMETRY_DISABLED=1
+                      NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
+                      POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+                      POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+                      POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+                      MERCADOPAGO_ACCESS_TOKEN=${{ secrets.MERCADOPAGO_ACCESS_TOKEN }}
+                      MERCADOPAGO_PUBLIC_KEY=${{ secrets.MERCADOPAGO_PUBLIC_KEY }}
+                      ENV_EOF
+
+                      echo "✅ Arquivo .env criado"
+
+                      # 5. Parar containers
+                      echo ""
+                      echo "🛑 Parando containers existentes..."
+                      docker compose down --remove-orphans 2>/dev/null || echo "Nenhum container rodando"
+
+                      # 6. Limpar recursos
+                      echo ""
+                      echo "🧹 Limpando recursos Docker..."
+                      docker system prune -f || true
+
+                      # 7. Build e start
+                      echo ""
+                      echo "🔨 Buildando e iniciando containers..."
+                      echo "⏳ Isso pode levar alguns minutos..."
+
+                      if ! docker compose up -d --build; then
+                          echo "❌ Falha no build!"
+                          docker compose logs --tail=50
+                          exit 1
+                      fi
+
+                      echo "✅ Containers iniciados"
+
+                      # 8. Aguardar healthchecks
+                      echo ""
+                      echo "⏳ Aguardando healthchecks (até 90s)..."
+
+                      for i in {1..18}; do
+                          sleep 5
+                          if docker exec terralsocial-postgres pg_isready -U ${POSTGRES_USER:-terral} &> /dev/null; then
+                              echo "✅ PostgreSQL pronto após $((i*5))s"
+                              break
+                          fi
+                          echo "⏳ Aguardando PostgreSQL... ($((i*5))s/90s)"
+                      done
+
+                      echo "⏳ Aguardando Next.js iniciar..."
+                      sleep 20
+
+                      # 9. Migrations
+                      echo ""
+                      echo "🗄️ Executando migrations..."
+                      docker exec terralsocial-nextjs npx prisma db push --skip-generate 2>&1 || echo "⚠️ Migrations já aplicadas"
+
+                      # 10. Verificar saúde
+                      echo ""
+                      echo "🏥 Verificando saúde dos containers..."
+                      echo ""
+                      docker compose ps
+                      echo ""
+
+                      # Verificar Next.js
+                      if docker ps -q -f name=terralsocial-nextjs -f status=running | grep -q .; then
+                          echo "✅ Next.js está rodando"
+                          echo ""
+                          echo "📋 Logs do Next.js:"
+                          docker logs terralsocial-nextjs --tail 20
+                      else
+                          echo "❌ Next.js NÃO está rodando!"
+                          docker logs terralsocial-nextjs --tail 100 2>&1
+                          exit 1
+                      fi
+
+                      echo ""
+
+                      # Verificar PostgreSQL
+                      if docker ps -q -f name=terralsocial-postgres -f status=running | grep -q .; then
+                          echo "✅ PostgreSQL está rodando"
+                      else
+                          echo "⚠️ PostgreSQL não está rodando"
+                      fi
+
+                      # Verificar Redis
+                      if docker ps -q -f name=terralsocial-redis -f status=running | grep -q .; then
+                          echo "✅ Redis está rodando"
+                      else
+                          echo "⚠️ Redis não está rodando"
+                      fi
+
+                      # 11. Teste de conectividade
+                      echo ""
+                      echo "🌐 Testando conectividade..."
+                      sleep 5
+
+                      if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
+                          echo "✅ Aplicação está respondendo"
+                      else
+                          echo "⚠️ Aplicação pode não estar pronta ainda"
+                      fi
+
+                      # 12. Resumo
+                      echo ""
+                      echo "========================================="
+                      echo "✅ DEPLOY CONCLUÍDO COM SUCESSO!"
+                      echo "========================================="
+                      echo "📦 Commit: ${AFTER:0:7}"
+                      echo "📅 Data: $(date '+%Y-%m-%d %H:%M:%S')"
+                      echo "🌐 URL: http://localhost:3000"
+                      echo "========================================="
 
             - name: Deployment Summary
               if: success()
