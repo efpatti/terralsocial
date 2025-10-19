@@ -5,7 +5,7 @@
  * Em produção: /terralsocial
  * Em dev também usa: /terralsocial
  */
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "/terralsocial";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "/";
 
 /**
  * Gera URL completa para chamadas de API
