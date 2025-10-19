@@ -21,9 +21,12 @@ jobs:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_KEY }}
+                  port: 22
+                  timeout: 5m
                   command_timeout: 30m
+                  script_stop: true
                   script: |
-                      set -e
+                      set -euo pipefail
 
                       # Configurações
                       DEPLOY_DIR="/opt/terralsocial"
