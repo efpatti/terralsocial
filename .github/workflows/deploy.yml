@@ -54,17 +54,66 @@ jobs:
                       echo "Limpando recursos Docker..."
                       docker system prune -f || true
 
+                      echo "Removendo volumes antigos (se necessário)..."
+                      # Comentado por segurança - descomente se quiser resetar o banco
+                      # docker volume rm terralsocial_postgres-data terralsocial_redis-data 2>/dev/null || true
+
                       echo "Buildando e iniciando containers..."
                       docker compose up -d --build
 
-                      echo "Aguardando containers iniciarem..."
-                      sleep 10
+                      if [ $? -ne 0 ]; then
+                        echo "ERRO: Falha ao buildar/iniciar containers!"
+                        echo "Logs do Docker Compose:"
+                        docker compose logs --tail=100
+                        exit 1
+                      fi
+
+                      echo "Aguardando containers iniciarem e healthchecks passarem..."
+                      echo "Isso pode levar até 30 segundos..."
+                      sleep 30
+
+                      echo ""
+                      echo "Status atual dos containers:"
+                      docker compose ps
 
                       echo "Executando migrations do banco..."
                       docker exec terralsocial-nextjs npx prisma db push --skip-generate || echo "Migrations ja aplicadas"
 
                       echo "Verificando status dos containers..."
                       docker compose ps
+
+                      # Verificar se os containers estão realmente rodando
+                      echo ""
+                      echo "Containers rodando:"
+                      docker ps --filter "name=terralsocial" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+                      # Verificar se o container Next.js está rodando
+                      if [ "$(docker ps -q -f name=terralsocial-nextjs -f status=running)" ]; then
+                        echo "✓ Container Next.js está rodando"
+                        echo "Logs recentes do Next.js:"
+                        docker logs terralsocial-nextjs --tail 30
+                      else
+                        echo "✗ ERRO: Container Next.js não está rodando!"
+                        echo "Logs completos do Next.js:"
+                        docker logs terralsocial-nextjs --tail 100 || echo "Container nao encontrado"
+                        exit 1
+                      fi
+
+                      # Verificar se o container PostgreSQL está rodando
+                      if [ "$(docker ps -q -f name=terralsocial-postgres -f status=running)" ]; then
+                        echo "✓ Container PostgreSQL está rodando"
+                      else
+                        echo "✗ AVISO: Container PostgreSQL não está rodando!"
+                        docker logs terralsocial-postgres --tail 50 || echo "Container nao encontrado"
+                      fi
+
+                      # Verificar se o container Redis está rodando
+                      if [ "$(docker ps -q -f name=terralsocial-redis -f status=running)" ]; then
+                        echo "✓ Container Redis está rodando"
+                      else
+                        echo "✗ AVISO: Container Redis não está rodando!"
+                        docker logs terralsocial-redis --tail 50 || echo "Container nao encontrado"
+                      fi
 
                       echo "========================================="
                       echo "Deploy concluido com sucesso!"
