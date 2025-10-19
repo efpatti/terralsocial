@@ -105,11 +105,13 @@ jobs:
           fail_ci_if_error: false
 
   # Job 4: Build Docker image
-  docker-build:
+  dockerbuild:
     name: Build Docker Image
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: build
+    # Só executa este job em pushes para branches principais
+    if: github.event_name == 'push'
 
     outputs:
       image-tag: ${{ steps.docker.outputs.tags }}
@@ -123,9 +125,8 @@ jobs:
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
-        if: github.event_name == 'push'
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
@@ -133,12 +134,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name == 'push' }}
+          push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/terralsocial:${{ github.sha }}
-            ${{ secrets.DOCKER_USERNAME }}/terralsocial:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/terralsocial:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/terralsocial:buildcache,mode=max
+            ${{ secrets.DOCKER_USER }}/terralsocial:${{ github.sha }}
+            ${{ secrets.DOCKER_USER }}/terralsocial:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USER }}/terralsocial:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USER }}/terralsocial:buildcache,mode=max
 
   # Job 5: Security scanning
   security-scan:
@@ -191,8 +192,7 @@ jobs:
     name: CI Summary
     runs-on: ubuntu-latest
     if: always()
-    needs:
-      [lint, build, test-unit, docker-build, security-scan, dependency-check]
+    needs: [lint, build, test-unit, security-scan, dependency-check]
 
     steps:
       - name: Check CI status
@@ -204,7 +204,6 @@ jobs:
           echo "  - Lint: ${{ needs.lint.result }}"
           echo "  - Build: ${{ needs.build.result }}"
           echo "  - Tests: ${{ needs.test-unit.result }}"
-          echo "  - Docker: ${{ needs.docker-build.result }}"
           echo "  - Security: ${{ needs.security-scan.result }}"
           echo "  - Dependencies: ${{ needs.dependency-check.result }}"
           echo "========================================="
