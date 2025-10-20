@@ -25,7 +25,7 @@ const Infobar = () => {
    initial={{ opacity: 0 }}
    animate={{ opacity: 1 }}
    transition={{ duration: 0.6, ease: "easeOut" }}
-   className="py-3 px-4"
+   className="py-3 px-4 hidden md:block"
    style={{ backgroundColor: terralTheme.colors.bg.dark }}
   >
    <div className="max-w-6xl mx-auto">

@@ -5,15 +5,22 @@ import { usePathname } from "next/navigation";
 import { NavbarItem } from "@/types/navbar";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { terralTheme } from "@/constants/theme";
 
 type MenuItemProps = {
  item: NavbarItem;
  onClick?: () => void;
+ mobile?: boolean;
+ subitem?: boolean;
 };
 
-export const MenuItem = ({ item, onClick }: MenuItemProps) => {
+export const MenuItem = ({
+ item,
+ onClick,
+ mobile = false,
+ subitem = false,
+}: MenuItemProps) => {
  const [isOpen, setIsOpen] = useState(false);
  const pathname = usePathname();
 
@@ -35,6 +42,66 @@ export const MenuItem = ({ item, onClick }: MenuItemProps) => {
   return false;
  }, [pathname, item]);
 
+ // Mobile version - simplified
+ if (mobile) {
+  if (subitem) {
+   const isSubActive = pathname.startsWith(item.href || "");
+   return (
+    <Link
+     href={item.href || "#"}
+     onClick={onClick}
+     className={`block pl-8 pr-4 py-3 text-base font-medium transition-all duration-200 rounded-lg mx-2 ${
+      isSubActive
+       ? "bg-green-50 text-[#499D4B] font-semibold border-l-4"
+       : "text-gray-700 hover:bg-green-50 hover:text-[#499D4B]"
+     }`}
+     style={
+      isSubActive
+       ? {
+          borderColor: terralTheme.colors.primary,
+          backgroundColor: `${terralTheme.colors.primary}10`,
+         }
+       : {}
+     }
+    >
+     <div className="flex items-center gap-3">
+      <ChevronRight size={16} className="text-gray-400" />
+      {item.label}
+     </div>
+    </Link>
+   );
+  }
+
+  return (
+   <Link
+    href={item.href || "#"}
+    onClick={onClick}
+    className={`block px-4 py-4 text-lg font-semibold transition-all duration-200 rounded-xl mx-2 ${
+     isActive ? "text-white shadow-lg" : "text-gray-900 hover:bg-gray-50"
+    }`}
+    style={
+     isActive
+      ? {
+         backgroundColor: terralTheme.colors.primary,
+        }
+      : {}
+    }
+   >
+    <div className="flex items-center justify-between">
+     {item.label}
+     {isActive && (
+      <motion.div
+       initial={{ scale: 0 }}
+       animate={{ scale: 1 }}
+       className="w-2 h-2 bg-white rounded-full"
+      />
+     )}
+    </div>
+   </Link>
+  );
+ }
+
+ // Desktop version (original)
  if (item.subitems && item.subitems.length > 0) {
   return (
    <div

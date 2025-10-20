@@ -121,6 +121,12 @@
  }
 }
 
+/* Prevent horizontal overflow (mobile fixes) */
+html,
+body {
+ overflow-x: hidden;
+}
+
 .shadow-top {
  /* Sombra apenas no topo */
  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1),
