@@ -187,10 +187,11 @@ const oficinas = [
  },
 ];
 
-// Componente de Oficinas com Slider (30%) e Carrossel (70%)
+// Componente de Oficinas - Simplificado para Mobile
 function OficinasSection() {
  const [currentImage, setCurrentImage] = useState(0);
  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+ const [cardsPerView, setCardsPerView] = useState(3);
 
  const images = [
   "/imagem-1-oficina.jpeg",
@@ -198,8 +199,24 @@ function OficinasSection() {
   "/imagem-3-oficina.jpg",
  ];
 
- const cardsPerView = 3;
- const maxIndex = oficinas.length - cardsPerView;
+ useEffect(() => {
+  const updateCardsPerView = () => {
+   if (window.innerWidth < 768) {
+    setCardsPerView(1);
+   } else if (window.innerWidth < 1024) {
+    setCardsPerView(2);
+   } else {
+    setCardsPerView(3);
+   }
+   setCurrentCardIndex(0);
+  };
+
+  updateCardsPerView();
+  window.addEventListener("resize", updateCardsPerView);
+  return () => window.removeEventListener("resize", updateCardsPerView);
+ }, []);
+
+ const maxIndex = Math.max(0, oficinas.length - cardsPerView);
 
  useEffect(() => {
   const interval = setInterval(() => {
@@ -235,34 +252,28 @@ function OficinasSection() {
      </p>
     </motion.div>
 
-    <div className="grid lg:grid-cols-10 gap-8 items-center">
-     {/* Slider de Imagens - 30% */}
+    {/* Layout Mobile: Stack Vertical */}
+    <div className="md:hidden space-y-8">
+     {/* Slider de Imagens Mobile */}
      <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className="lg:col-span-3 relative h-[500px] rounded-3xl overflow-hidden shadow-2xl"
+      className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl"
      >
       {images.map((image, index) => (
-       <div
+       <Image
         key={index}
-        className="absolute inset-0 transition-all duration-700 ease-in-out"
-        style={{
-         opacity: index === currentImage ? 1 : 0,
-         transform: index === currentImage ? "scale(1)" : "scale(1.1)",
-         zIndex: index === currentImage ? 1 : 0,
-        }}
-       >
-        <Image
-         src={prefix(image)}
-         alt={`Oficina ${index + 1} - Terral Social`}
-         fill
-         className="object-cover"
-         sizes="(max-width: 1024px) 100vw, 30vw"
-         priority={index === 0}
-        />
-       </div>
+        src={prefix(image)}
+        alt={`Oficina ${index + 1} - Terral Social`}
+        fill
+        className={`object-cover transition-opacity duration-700 ${
+         index === currentImage ? "opacity-100" : "opacity-0"
+        }`}
+        sizes="100vw"
+        priority={index === 0}
+       />
       ))}
 
       <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
@@ -281,12 +292,96 @@ function OficinasSection() {
       </div>
      </motion.div>
 
-     {/* Carrossel de Cards - 70% */}
+     {/* Cards Mobile - Stack Vertical */}
+     <div className="space-y-4">
+      {oficinas.map((oficina, index) => (
+       <motion.div
+        key={index}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: index * 0.1 }}
+       >
+        <Link href={oficina.link}>
+         <div
+          className="rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all cursor-pointer group active:scale-95"
+          style={{ backgroundColor: oficina.color }}
+         >
+          <div className="flex items-center gap-4">
+           <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-all flex-shrink-0">
+            <oficina.icon size={28} className="text-white" />
+           </div>
+
+           <div className="flex-1">
+            <h3 className="text-2xl font-black text-white mb-1">
+             {oficina.title}
+            </h3>
+            <div className="flex items-center gap-2 text-sm font-bold text-white/90">
+             Saiba mais
+             <ArrowRight size={16} />
+            </div>
+           </div>
+          </div>
+         </div>
+        </Link>
+       </motion.div>
+      ))}
+     </div>
+    </div>
+
+    {/* Layout Desktop/Tablet: Grid Original */}
+    <div className="hidden md:grid lg:grid-cols-10 gap-8 items-center">
+     {/* Slider de Imagens Desktop */}
+     <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="lg:col-span-3 relative w-full aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl"
+     >
+      {images.map((image, index) => (
+       <Image
+        key={index}
+        src={prefix(image)}
+        alt={`Oficina ${index + 1} - Terral Social`}
+        fill
+        className={`object-cover transition-opacity duration-700 ${
+         index === currentImage ? "opacity-100" : "opacity-0"
+        }`}
+        sizes="(max-width: 1024px) 50vw, 30vw"
+        priority={index === 0}
+       />
+      ))}
+
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
+       {images.map((_, index) => (
+        <button
+         key={index}
+         onClick={() => setCurrentImage(index)}
+         className={`h-2 rounded-full transition-all ${
+          index === currentImage
+           ? "bg-white w-8"
+           : "bg-white/50 w-2 hover:bg-white/70"
+         }`}
+         aria-label={`Ver imagem ${index + 1}`}
+        />
+       ))}
+      </div>
+     </motion.div>
+
+     {/* Carrossel de Cards Desktop */}
      <div className="lg:col-span-7 relative">
       <div className="overflow-hidden">
        <motion.div
         className="flex gap-4"
-        animate={{ x: -currentCardIndex * (100 / cardsPerView + 1.33) + "%" }}
+        animate={{
+         x:
+          cardsPerView === 2
+           ? `calc(-${currentCardIndex * 50}% - ${currentCardIndex * 8}px)`
+           : `calc(-${currentCardIndex * 33.333}% - ${
+              currentCardIndex * 10.67
+             }px)`,
+        }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
        >
         {oficinas.map((oficina, index) => (
@@ -296,12 +391,11 @@ function OficinasSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: index * 0.1 }}
-          className="flex-shrink-0"
-          style={{
-           width: `calc(${100 / cardsPerView}% - ${
-            ((cardsPerView - 1) * 16) / cardsPerView
-           }px)`,
-          }}
+          className={
+           cardsPerView === 2
+            ? "flex-shrink-0 w-[calc(50%-8px)]"
+            : "flex-shrink-0 w-[calc(33.333%-10.67px)]"
+          }
          >
           <Link href={oficina.link}>
            <div
