@@ -53,6 +53,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copiar schema do Prisma para produção
+COPY --from=builder /app/prisma ./prisma
 
 # Mudar para o usuário não-root
 USER nextjs
