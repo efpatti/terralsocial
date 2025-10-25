@@ -9,7 +9,7 @@ services:
     container_name: terralsocial-nextjs
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
@@ -32,11 +32,11 @@ services:
     container_name: terralsocial-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-terral}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-terral_password}
-      - POSTGRES_DB=${POSTGRES_DB:-terralsocial}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=terralsocial
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -53,7 +53,7 @@ services:
     container_name: terralsocial-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     networks:
