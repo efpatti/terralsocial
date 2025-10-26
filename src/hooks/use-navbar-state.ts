@@ -15,29 +15,19 @@ export function useNavbarState() {
     if (!ticking.current) {
       window.requestAnimationFrame(() => {
         const currentScrollY = window.scrollY;
-        const threshold = 100; // slightly higher threshold to reduce toggles on small layout shifts
-        const lowerBound = 40; // hysteresis lower bound
-        const upDeltaToClose = 30; // if user scrolls up quickly by this px, close header
+        const SHOW_THRESHOLD = 80; // Mostra abaixo de 80px
+        const HIDE_THRESHOLD = 120; // Esconde acima de 120px
 
-        const delta = currentScrollY - lastScrollY.current;
-
-        // Abrupt downward scroll beyond threshold => set scrolled
-        if (currentScrollY > threshold && !isScrolled) {
+        // Histerese: diferentes thresholds pra abrir/fechar
+        if (currentScrollY > HIDE_THRESHOLD && !isScrolled) {
           setIsScrolled(true);
-        }
-
-        // If user scrolls up quickly (negative delta) or we are near top (below lowerBound) => unset scrolled
-        if (
-          (delta < -upDeltaToClose && isScrolled) ||
-          (currentScrollY < lowerBound && isScrolled)
-        ) {
+        } else if (currentScrollY < SHOW_THRESHOLD && isScrolled) {
           setIsScrolled(false);
         }
 
         lastScrollY.current = currentScrollY;
         ticking.current = false;
       });
-
       ticking.current = true;
     }
   }, [isScrolled]);
