@@ -67,7 +67,7 @@ const TestimonialsPage = () => {
    </svg>
 
    <div className="max-w-7xl mx-auto relative z-10">
-    {/* Header orgânico */}
+    {/* Index orgânico */}
     <motion.div
      initial={{ opacity: 0, y: 20 }}
      animate={{ opacity: 1, y: 0 }}

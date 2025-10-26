@@ -27,7 +27,7 @@ export default function Workshop({
 }: OficinaPageProps) {
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Header com cor temática */}
+      {/* Index com cor temática */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

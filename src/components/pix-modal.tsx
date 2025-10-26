@@ -47,7 +47,7 @@ export default function PixModal({ isOpen, onClose, qrCode, qrCodeBase64, amount
         onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
       >
-        {/* Header */}
+        {/* Index */}
         <div className="bg-gradient-to-r from-[#499D4B] to-[#3d8540] p-6 text-white relative">
           <button
             onClick={onClose}

@@ -162,7 +162,7 @@ export default function SejaUmParceiro() {
 
  return (
   <div className="min-h-screen bg-gradient-to-br from-[#FFFBF5] via-white to-blue-50">
-   {/* Header */}
+   {/* Index */}
    <div className="bg-gradient-to-r from-[#499D4B] to-[#3d8540] text-white py-8 px-4">
     <div className="max-w-7xl mx-auto">
      <Link
