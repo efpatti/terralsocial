@@ -207,7 +207,7 @@ export default function DonationForm({ preSelectedAmount }: DonationFormProps) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-2xl shadow-2xl border-2 border-gray-100 overflow-hidden"
     >
-      {/* Header */}
+      {/* Index */}
       <div className="bg-gradient-to-r from-[#499D4B] to-[#3d8540] p-6 text-white">
         <h2 className="text-2xl font-black mb-2">Complete sua doação</h2>
         <p className="text-sm opacity-90">Escolha o valor e a forma de pagamento</p>

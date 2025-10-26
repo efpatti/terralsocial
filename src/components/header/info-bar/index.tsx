@@ -4,7 +4,7 @@ import { terralTheme } from "@/constants/theme";
 import { InfoItems } from "@/constants/info-items";
 import { InfoBarItem } from "@/components/header/info-bar/info-bar-item";
 
-const Index = () => {
+const InfoBar = () => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -24,4 +24,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default InfoBar;

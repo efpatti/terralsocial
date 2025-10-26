@@ -78,7 +78,7 @@ export default function SejaClienteDoBazar() {
 
  return (
   <div className="min-h-screen bg-gradient-to-br from-[#FFFBF5] via-white to-blue-50">
-   {/* Header */}
+   {/* Index */}
    <div className="bg-gradient-to-r from-[#3ca0e7] to-[#2a7bb8] text-white py-8 px-4">
     <div className="max-w-7xl mx-auto">
      <Link
