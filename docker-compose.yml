@@ -34,8 +34,8 @@ services:
     ports:
       - "5433:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=terral
+      - POSTGRES_PASSWORD=terral_password
       - POSTGRES_DB=terralsocial
     volumes:
       - postgres-data:/var/lib/postgresql/data
