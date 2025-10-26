@@ -7,52 +7,43 @@ import { useNavbarState } from "@/hooks/use-navbar-state";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Header = () => {
-    const isMobile = useIsMobile();
-    const { isScrolled } = useNavbarState();
+  const isMobile = useIsMobile();
+  const { isScrolled } = useNavbarState();
 
+  if (isMobile) {
     return (
-        <header className="top-0 z-50 bg-white shadow-sm sticky">
-            {!isMobile && (
-                <>
-                    <AnimatePresence>
-                        {!isScrolled && (
-                            <motion.div
-                                initial={{ height: "auto", opacity: 1 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{
-                                    duration: 0.3,
-                                    ease: [0.25, 0.1, 0.25, 1]
-                                }}
-                                style={{ overflow: "hidden" }}
-                            >
-                                <InfoBar />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <AnimatePresence>
-                        {!isScrolled && (
-                            <motion.div
-                                initial={{ height: "auto", opacity: 1 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{
-                                    duration: 0.3,
-                                    ease: [0.25, 0.1, 0.25, 1],
-                                    delay: 0.05
-                                }}
-                                style={{ overflow: "hidden" }}
-                            >
-                                <LogoHeader />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </>
-            )}
-            <Navbar />
-        </header>
+      <header className="top-0 z-50 bg-white shadow-sm sticky">
+        <Navbar />
+      </header>
     );
+  }
+
+  return (
+    <header className="top-0 z-50 bg-white shadow-sm sticky">
+      <AnimatePresence mode="wait">
+        {!isScrolled && (
+          <motion.div
+            key="header-content"
+            initial={{ opacity: 0, y: -32 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{
+              opacity: 0,
+              y: -32,
+              transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+            }}
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            style={{
+              willChange: "transform, opacity",
+            }}
+          >
+            <InfoBar />
+            <LogoHeader />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <Navbar />
+    </header>
+  );
 };
 
 export default Header;
