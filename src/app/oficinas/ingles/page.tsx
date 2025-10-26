@@ -1,9 +1,9 @@
-import OficinaPage from "@/components/OficinaPage";
+import Workshop from "@/components/workshop";
 import { Globe } from "lucide-react";
 
 export default function InglesPage() {
  return (
-  <OficinaPage
+  <Workshop
    title="Inglês"
    subtitle="Ensino de idioma global promovendo qualificação pessoal e profissional"
    color="#3ca0e7"

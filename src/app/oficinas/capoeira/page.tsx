@@ -1,9 +1,9 @@
-import OficinaPage from "@/components/OficinaPage";
+import Workshop from "@/components/workshop";
 import { Music } from "lucide-react";
 
 export default function CapoeiraPage() {
  return (
-  <OficinaPage
+  <Workshop
    title="Capoeira"
    subtitle="Preservação da cultura através do desenvolvimento físico e social"
    color="#F59E0B"

@@ -1,9 +1,9 @@
-import OficinaPage from "@/components/OficinaPage";
+import Workshop from "@/components/workshop";
 import { BookOpen } from "lucide-react";
 
 export default function ReforcoEscolarPage() {
  return (
-  <OficinaPage
+  <Workshop
    title="Reforço Escolar"
    subtitle="Estimulando a aprendizagem e promovendo acesso à educação"
    color="#499D4B"

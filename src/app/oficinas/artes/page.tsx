@@ -1,9 +1,9 @@
-import OficinaPage from "@/components/OficinaPage";
+import Workshop from "@/components/workshop";
 import { Palette } from "lucide-react";
 
 export default function ArtesPage() {
  return (
-  <OficinaPage
+  <Workshop
    title="Artes"
    subtitle="Descobrindo e fomentando talentos através da expressão artística"
    color="#E74C3C"

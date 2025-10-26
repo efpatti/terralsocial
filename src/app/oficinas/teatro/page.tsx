@@ -1,9 +1,9 @@
-import OficinaPage from "@/components/OficinaPage";
+import Workshop from "@/components/workshop";
 import { Drama } from "lucide-react";
 
 export default function TeatroPage() {
  return (
-  <OficinaPage
+  <Workshop
    title="Teatro"
    subtitle="Explorando novas perspectivas em consciência corporal, expressão e comunicação"
    color="#10B981"

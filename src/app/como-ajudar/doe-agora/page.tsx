@@ -12,7 +12,7 @@ import {
  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import DonationForm from "@/components/DonationForm";
+import DonationForm from "@/components/donation-form";
 
 const impactExamples = [
  {

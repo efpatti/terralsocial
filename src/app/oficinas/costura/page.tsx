@@ -1,9 +1,9 @@
-import OficinaPage from "@/components/OficinaPage";
+import Workshop from "@/components/workshop";
 import { Scissors } from "lucide-react";
 
 export default function CosturaPage() {
  return (
-  <OficinaPage
+  <Workshop
    title="Costura"
    subtitle="Desenvolvimento profissional através da socialização e troca de conhecimentos"
    color="#8B5CF6"

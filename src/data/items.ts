@@ -1,4 +1,4 @@
-import { NavbarItem } from "@/types/navbar";
+import { NavbarItem } from "@/types/navbar-item";
 
 const slugify = (value: string): string =>
  value
