@@ -7,7 +7,8 @@ import { motion } from "framer-motion";
 const LogoHeader = () => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
+      // avoid replaying the mount animation when parent re-renders
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="py-3 flex flex-col items-center bg-gradient-to-b from-white to-gray-50"
