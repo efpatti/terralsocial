@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { terralTheme } from "@/constants/theme";
 import { MenuItemConfig } from "@/types/menu-item-config";
+import Portal from "@/components/ui/portal";
 
 export const MenuItem = ({ item, onClick, mobile = false, subitem = false }: MenuItemConfig) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +30,29 @@ export const MenuItem = ({ item, onClick, mobile = false, subitem = false }: Men
 
     return false;
   }, [pathname, item]);
+
+  // Portal positioning helpers (declare hooks at top-level to follow Rules of Hooks)
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [coords, setCoords] = useState<{ left: number; top: number } | null>(null);
+
+  const updateCoords = () => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setCoords({ left: rect.left, top: rect.bottom });
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updateCoords();
+    const onScroll = () => updateCoords();
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", updateCoords);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", updateCoords);
+    };
+  }, [isOpen]);
 
   // Mobile version - simplified
   if (mobile) {
@@ -94,10 +118,14 @@ export const MenuItem = ({ item, onClick, mobile = false, subitem = false }: Men
     return (
       <div
         className="relative"
-        onMouseEnter={() => setIsOpen(true)}
+        onMouseEnter={() => {
+          setIsOpen(true);
+          updateCoords();
+        }}
         onMouseLeave={() => setIsOpen(false)}
       >
         <button
+          ref={buttonRef}
           className={`flex items-center gap-1 font-semibold transition-all duration-200 px-4 py-2 rounded-md hover:bg-green-50 relative ${
             isActive ? "text-[#499D4B]" : "text-gray-700 hover:text-[#499D4B]"
           }`}
@@ -122,48 +150,55 @@ export const MenuItem = ({ item, onClick, mobile = false, subitem = false }: Men
 
         <AnimatePresence>
           {isOpen && (
-            <motion.div
-              className="absolute left-0 top-full mt-2 w-56 bg-white shadow-xl rounded-lg overflow-hidden border-2"
-              style={{ borderColor: terralTheme.colors.primary }}
-              initial={{ opacity: 0, y: -8, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <div className="py-2">
-                {item.subitems.map((sub, idx) => {
-                  const isSubActive = pathname.startsWith(sub.href);
-                  return (
-                    <motion.div
-                      key={sub.href}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.2,
-                        delay: idx * 0.03,
-                        ease: [0.25, 0.1, 0.25, 1],
-                      }}
-                    >
-                      <Link
-                        href={sub.href}
-                        onClick={() => {
-                          onClick?.();
-                          setIsOpen(false);
+            <Portal>
+              <motion.div
+                className="z-[9999] w-56 bg-white shadow-xl rounded-lg overflow-hidden border-2"
+                style={{
+                  borderColor: terralTheme.colors.primary,
+                  position: "fixed",
+                  left: coords?.left ?? 0,
+                  top: coords?.top ?? 0,
+                }}
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <div className="py-2">
+                  {item.subitems.map((sub, idx) => {
+                    const isSubActive = pathname.startsWith(sub.href);
+                    return (
+                      <motion.div
+                        key={sub.href}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: idx * 0.03,
+                          ease: [0.25, 0.1, 0.25, 1],
                         }}
-                        className={`block px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                          isSubActive
-                            ? "bg-green-50 text-[#499D4B] font-bold pl-6 border-l-4"
-                            : "text-gray-700 hover:bg-green-50 hover:text-[#499D4B] hover:pl-6"
-                        }`}
-                        style={isSubActive ? { borderColor: terralTheme.colors.primary } : {}}
                       >
-                        {sub.label}
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
+                        <Link
+                          href={sub.href}
+                          onClick={() => {
+                            onClick?.();
+                            setIsOpen(false);
+                          }}
+                          className={`block px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                            isSubActive
+                              ? "bg-green-50 text-[#499D4B] font-bold pl-6 border-l-4"
+                              : "text-gray-700 hover:bg-green-50 hover:text-[#499D4B] hover:pl-6"
+                          }`}
+                          style={isSubActive ? { borderColor: terralTheme.colors.primary } : {}}
+                        >
+                          {sub.label}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </Portal>
           )}
         </AnimatePresence>
       </div>
