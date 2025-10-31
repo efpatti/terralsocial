@@ -24,6 +24,7 @@ jobs:
                   echo "🏥 Health Check - Production"
                   echo "========================================="
 
+                  # Secret exists and is configured in repository settings
                   BASE_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
 
                   # Verificar disponibilidade
