@@ -3,7 +3,7 @@ name: Health Check and Monitoring
 on:
     schedule:
         # Rodas a cada 30 minutos
-        - cron: "*/30 * * * *"
+        - cron: "0 0 * * 0"
     workflow_dispatch:
 
 permissions:
@@ -64,7 +64,7 @@ jobs:
 
         steps:
             - name: Check database connectivity
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -124,7 +124,7 @@ jobs:
 
         steps:
             - name: Check Docker containers
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -184,7 +184,7 @@ jobs:
 
         steps:
             - name: Check disk space
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -227,7 +227,7 @@ jobs:
 
         steps:
             - name: Analyze logs
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -333,7 +333,7 @@ jobs:
 
             - name: Create issue if failed
               if: failure()
-              uses: actions/github-script@v7
+              uses: actions/github-script@v6
               with:
                   script: |
                       github.rest.issues.create({

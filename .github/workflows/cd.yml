@@ -37,7 +37,7 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
               with:
                   ref: main
 
@@ -57,7 +57,7 @@ jobs:
                   echo "📦 Backup ID: $BACKUP_ID"
 
             - name: Create deployment status
-              uses: actions/github-script@v7
+              uses: actions/github-script@v6
               with:
                   script: |
                       github.rest.repos.createDeployment({
@@ -80,10 +80,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Backup database
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -135,10 +135,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Verify VPS access and requirements
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -194,10 +194,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Clone/Update repository
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -250,10 +250,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Configure environment variables
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -293,10 +293,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Prepare new environment
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -340,10 +340,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Run health checks
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -417,10 +417,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Run smoke tests
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -467,23 +467,21 @@ jobs:
         timeout-minutes: 10
         if: success()
         needs:
-            [
-                pre-deployment-checks,
-                database-backup,
-                check-prerequisites,
-                update-repository,
-                setup-environment,
-                prepare-new-deployment,
-                health-checks,
-                post-deployment-tests,
-            ]
+            - pre-deployment-checks
+            - database-backup
+            - check-prerequisites
+            - update-repository
+            - setup-environment
+            - prepare-new-deployment
+            - health-checks
+            - post-deployment-tests
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Get deployment info
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -506,7 +504,7 @@ jobs:
                       echo "========================================="
 
             - name: Create successful deployment
-              uses: actions/github-script@v7
+              uses: actions/github-script@v6
               with:
                   script: |
                       github.rest.repos.createDeploymentStatus({
@@ -524,23 +522,21 @@ jobs:
         timeout-minutes: 15
         if: failure() && (needs.health-checks.result == 'failure' || needs.post-deployment-tests.result == 'failure')
         needs:
-            [
-                pre-deployment-checks,
-                database-backup,
-                check-prerequisites,
-                update-repository,
-                setup-environment,
-                prepare-new-deployment,
-                health-checks,
-                post-deployment-tests,
-            ]
+            - pre-deployment-checks
+            - database-backup
+            - check-prerequisites
+            - update-repository
+            - setup-environment
+            - prepare-new-deployment
+            - health-checks
+            - post-deployment-tests
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
             - name: Rollback deployment
-              uses: appleboy/ssh-action@v1.0.3
+              uses: appleboy/ssh-action@v0.1.6
               with:
                   host: ${{ secrets.VPS_HOST }}
                   username: ${{ secrets.VPS_USER }}
@@ -583,7 +579,7 @@ jobs:
                       echo "========================================="
 
             - name: Create failed deployment
-              uses: actions/github-script@v7
+              uses: actions/github-script@v6
               with:
                   script: |
                       github.rest.repos.createDeploymentStatus({
