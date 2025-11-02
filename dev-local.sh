@@ -16,7 +16,7 @@ if [ ! -f .env ]; then
   
   cat > .env << EOF
 # Database
-DATABASE_URL=postgresql://terral:terral_password@localhost:5433/terralsocial
+DATABASE_URL=postgresql://terral:terral_password@localhost:5432/terralsocial
 
 # Redis
 REDIS_URL=redis://localhost:6380
