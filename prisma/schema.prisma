@@ -10,6 +10,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users       User[]
+
+  @@map("roles")
+  @@index([name])
+}
+
 model User {
   id            String    @id @default(uuid())
   name          String?
@@ -19,6 +32,10 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Relations
+  roleId        Int?
+  role          Role?     @relation(fields: [roleId], references: [id])
 
   accounts Account[]
   sessions Session[]

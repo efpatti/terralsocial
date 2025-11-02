@@ -1,38 +1,52 @@
 import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      email?: string | null;
-      name?: string | null;
-      image?: string | null;
-    } & DefaultSession["user"];
-  }
+ interface Session {
+  user: {
+   id: string;
+   email?: string | null;
+   name?: string | null;
+   image?: string | null;
+   roleId?: number | null;
+   role?: {
+    id: number;
+    name: string;
+   } | null;
+  } & DefaultSession["user"];
+ }
 
-  interface User {
-    id: string;
-    email?: string | null;
-    name?: string | null;
-    image?: string | null;
-  }
+ interface User {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+  roleId?: number | null;
+  role?: {
+   id: number;
+   name: string;
+  } | null;
+ }
 }
 
 declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    email?: string | null;
-  }
+ interface JWT {
+  id: string;
+  email?: string | null;
+  roleId?: number | null;
+  role?: {
+   id: number;
+   name: string;
+  } | null;
+ }
 }
 
 export type SignUpData = {
-  name: string;
-  email: string;
-  password: string;
+ name: string;
+ email: string;
+ password: string;
 };
 
 export type SignInData = {
-  email: string;
-  password: string;
+ email: string;
+ password: string;
 };
-
